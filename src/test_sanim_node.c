@@ -16,53 +16,144 @@
 #include "sanim.h"
 #include "test_sanim_utils.h"
 
-#include <rsys/logger.h>
+#include <rsys/double33.h>
+
+struct my_type {
+  struct sanim_node node;
+  double my_data;
+  /* may be some ref count mechanism */
+};
+
+static res_T
+my_type_init(struct mem_allocator *allocator, struct my_type* t) {
+  if (!t) return RES_BAD_ARG;
+  /* init my stuff */
+  t->my_data = 0;
+  /* init node stuff */
+  return sanim_node_initialize(allocator, &t->node);
+}
+
+static res_T
+my_type_release(struct my_type* t) {
+  if (!t) return RES_BAD_ARG;
+  /* release my stuff */
+  /* release node stuff */
+  return sanim_node_release(&t->node);
+}
+
+static res_T
+my_type_add_child(struct my_type* t, struct my_type* child) {
+  if (!t || !child) return RES_BAD_ARG;
+  /* release my stuff */
+  /* release node stuff */
+  return sanim_node_add_child(&t->node, &child->node);
+}
+
+static res_T
+my_type_set_translation(struct my_type* t, const double translation[3]) {
+  if (!t || !translation) return RES_BAD_ARG;
+  return sanim_node_set_translation(&t->node, translation);
+}
+
+static res_T
+my_type_set_rotations(struct my_type* t, const double rotations[3]) {
+  if (!t || !rotations) return RES_BAD_ARG;
+  return sanim_node_set_rotations(&t->node, rotations);
+}
+
+static res_T
+my_type_get_world_transform(struct my_type* t, double transform[12]) {
+  if (!t || !transform) return RES_BAD_ARG;
+  return sanim_node_get_world_transform(&t->node, transform);
+}
+
+static char
+d3_is_zero_eps(const double v[3], const double eps) {
+  int x;
+  ASSERT(eps >= 0);
+  FOR_EACH(x, 0, 3) {
+    if (fabs(v[x]) > eps) return 0;
+  }
+  return 1;
+}
+
+static char
+d3_is_zero(const double v[3]) {
+  int x;
+  FOR_EACH(x, 0, 3) {
+    if (v[x]) return 0;
+  }
+  return 1;
+}
+
+static char
+d33_is_identity_eps(const double v[9], const double eps) {
+  int i = 0, x, y;
+  ASSERT(eps >= 0);
+  FOR_EACH(x, 0, 3) {
+    FOR_EACH(y, 0, 3) {
+      if (fabs(v[i] - (x == y ? 1 : 0)) > eps) return 0;
+      ++i;
+    }
+  }
+  return 1;
+}
 
 int
 main(int argc, char** argv)
 {
-  struct logger logger;
   struct mem_allocator allocator;
-  struct sanim_device* dev;
-  struct sanim_node* node1;
-  struct sanim_node* node2;
+  struct my_type t1, t2;
+  double transl[3], rot[3], transform[12];
   (void) argc, (void) argv;
 
   mem_init_proxy_allocator(&allocator, &mem_default_allocator);
+  
+  /* test a typical use in my_type */
+  CHECK(my_type_init(NULL, &t1), RES_OK);
+  CHECK(my_type_release(NULL), RES_BAD_ARG);
+  CHECK(my_type_release(&t1), RES_OK);
+  CHECK(my_type_init(&allocator, &t1), RES_OK);
+  CHECK(my_type_init(&allocator, NULL), RES_BAD_ARG);
+  CHECK(my_type_init(&allocator, &t2), RES_OK);
 
-  CHECK(logger_init(&allocator, &logger), RES_OK);
-  logger_set_stream(&logger, LOG_OUTPUT, log_stream, NULL);
-  logger_set_stream(&logger, LOG_ERROR, log_stream, NULL);
-  logger_set_stream(&logger, LOG_WARNING, log_stream, NULL);
+  CHECK(my_type_add_child(NULL, &t1), RES_BAD_ARG);
+  CHECK(my_type_add_child(&t1, NULL), RES_BAD_ARG);
+  CHECK(my_type_add_child(&t1, &t1), RES_BAD_ARG);
+  CHECK(my_type_add_child(&t1, &t2), RES_OK);
+  CHECK(my_type_add_child(&t1, &t2), RES_BAD_ARG);
+  CHECK(my_type_add_child(&t2, &t1), RES_BAD_ARG);
 
-  CHECK(sanim_device_create
-    (&logger, &allocator, SANIM_NTHREADS_DEFAULT, 0, &dev), RES_OK);
+  d3_splat(transl, +1);
+  CHECK(my_type_set_translation(NULL, transl), RES_BAD_ARG);
+  CHECK(my_type_set_translation(&t1, NULL), RES_BAD_ARG);
+  CHECK(my_type_set_translation(&t1, transl), RES_OK);
 
-  CHECK(sanim_node_create(NULL, &node1), RES_BAD_ARG);
-  CHECK(sanim_node_create(dev, NULL), RES_BAD_ARG);
-  CHECK(sanim_node_create(dev, &node1), RES_OK);
-  CHECK(sanim_node_ref_get(NULL), RES_BAD_ARG);
-  CHECK(sanim_node_ref_get(node1), RES_OK);
-  CHECK(sanim_node_ref_put(NULL), RES_BAD_ARG);
-  CHECK(sanim_node_ref_put(node1), RES_OK);
-  CHECK(sanim_node_ref_put(node1), RES_OK);
+  d3_splat(transl, -1);
+  CHECK(my_type_set_translation(&t2, transl), RES_OK);
 
-  CHECK(sanim_node_create(dev, &node1), RES_OK);
-  CHECK(sanim_node_create(dev, &node2), RES_OK);
+  CHECK(my_type_get_world_transform(NULL, transform), RES_BAD_ARG);
+  CHECK(my_type_get_world_transform(&t2, NULL), RES_BAD_ARG);
+  CHECK(my_type_get_world_transform(&t2, transform), RES_OK);
+  CHECK(d33_is_identity(transform), 1);
+  CHECK(d3_is_zero(transform + 9), 1);
 
-  CHECK(sanim_node_add_child(NULL, node1), RES_BAD_ARG);
-  CHECK(sanim_node_add_child(node1, NULL), RES_BAD_ARG);
-  CHECK(sanim_node_add_child(node1, node1), RES_BAD_ARG);
-  CHECK(sanim_node_add_child(node1, node2), RES_OK);
-  CHECK(sanim_node_add_child(node1, node2), RES_BAD_ARG);
-  CHECK(sanim_node_add_child(node2, node1), RES_BAD_ARG);
+  d3(rot, PI, 0, 0);
+  CHECK(my_type_set_rotations(NULL, rot), RES_BAD_ARG);
+  CHECK(my_type_set_rotations(&t1, NULL), RES_BAD_ARG);
+  CHECK(my_type_set_rotations(&t1, rot), RES_OK);
+  CHECK(my_type_set_rotations(&t2, rot), RES_OK);
+  d3(transl, 0, +1, 0);
+  CHECK(my_type_set_translation(&t1, transl), RES_OK);
+  CHECK(my_type_set_translation(&t2, transl), RES_OK);
 
-  CHECK(sanim_node_ref_put(node1), RES_OK);
-  CHECK(sanim_node_ref_put(node2), RES_OK);
+  CHECK(my_type_get_world_transform(&t2, transform), RES_OK);
+  CHECK(d33_is_identity_eps(transform, 1e-10), 1);
+  CHECK(d3_is_zero_eps(transform + 9, 1e-10), 1);
 
-  CHECK(sanim_device_ref_put(dev), RES_OK);
+  CHECK(my_type_release(&t1), RES_OK);
+  CHECK(my_type_release(&t2), RES_OK);
 
-  logger_release(&logger);
   check_memory_allocator(&allocator);
   mem_shutdown_proxy_allocator(&allocator);
   CHECK(mem_allocated_size(), 0);

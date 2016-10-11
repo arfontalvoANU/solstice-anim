@@ -43,11 +43,15 @@
 /* Forward declaration of external types */
 struct logger;
 struct mem_allocator;
-struct ssp_rng;
+struct sanim_node_data;
 
 /* Opaque Solstice Anim types */
 struct sanim_device;
-struct sanim_node;
+
+/* sanim_node type for building own node types */
+struct sanim_node {
+  struct sanim_node_data* data;
+};
 
 BEGIN_DECLS
 
@@ -65,19 +69,23 @@ sanim_device_create
 
 SANIM_API res_T
 sanim_device_ref_get
-(struct sanim_device* dev);
+  (struct sanim_device* dev);
 
 SANIM_API res_T
 sanim_device_ref_put
-(struct sanim_device* dev);
+  (struct sanim_device* dev);
 
 /*******************************************************************************
  * Node API.
  ******************************************************************************/
 SANIM_API res_T
-sanim_node_create
-  (struct sanim_device* dev,
-   struct sanim_node** node);
+sanim_node_initialize
+  (struct mem_allocator* allocator, /* May be NULL <=> use default allocator */
+   struct sanim_node* node);
+
+SANIM_API res_T
+sanim_node_release
+  (struct sanim_node* node);
 
 SANIM_API res_T
 sanim_node_add_child
@@ -85,12 +93,19 @@ sanim_node_add_child
    struct sanim_node* child);
 
 SANIM_API res_T
-sanim_node_ref_get
-  (struct sanim_node* node);
+sanim_node_set_translation
+  (struct sanim_node* node,
+   const double translation[3]);
 
 SANIM_API res_T
-sanim_node_ref_put
-  (struct sanim_node* node);
+sanim_node_set_rotations
+  (struct sanim_node* node,
+   const double rotations[3]); /* XYZ convention */
+
+SANIM_API res_T
+sanim_node_get_world_transform
+  (struct sanim_node* node,
+   double transform[12]); /* 3x4 column major matrix */
 
 END_DECLS
 

@@ -16,21 +16,23 @@
 #ifndef SANIM_NODE_C_H
 #define SANIM_NODE_C_H
 
-#include <rsys/ref_count.h>
-#include <rsys/ref_count.h>
+struct sanim_node_data;
+struct mem_allocator;
+
 #include <rsys/dynamic_array.h>
 
 /* Define the darray_children data structure */
 #define DARRAY_NAME children
-#define DARRAY_DATA struct sanim_node*
+#define DARRAY_DATA struct sanim_node_data*
 #include <rsys/dynamic_array.h>
 
-struct sanim_node {
-  struct sanim_node* father; /* can be NULL: root node */
+struct sanim_node_data {
+  double translation[3];
+  double rotations[3];
+  struct sanim_node_data* father; /* can be NULL: root node */
   struct darray_children children;
-
-  struct sanim_device* dev;
-  ref_T ref;
+  struct mem_allocator* allocator;
 };
+
 
 #endif /* SANIM_NODE_C_H */

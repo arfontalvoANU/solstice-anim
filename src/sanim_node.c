@@ -19,75 +19,52 @@
 
 #include <rsys/mem_allocator.h>
 #include <rsys/ref_count.h>
+#include <rsys/double33.h>
+#include <rsys/double44.h>
 
 /*******************************************************************************
 * Helper functions
 ******************************************************************************/
-static void
-node_release(ref_T* ref)
-{
-  struct sanim_device* dev;
-  struct sanim_node* node = CONTAINER_OF(ref, struct sanim_node, ref);
-  ASSERT(ref);
-  dev = node->dev;
-  ASSERT(dev && dev->allocator);
-  darray_children_release(&node->children);
-  /* FIXME: use refcount for father/children? */
-  MEM_RM(dev->allocator, node);
-  SANIM(device_ref_put(dev));
-}
-
 static int
-is_ascendant(const struct sanim_node* node, const struct sanim_node* ascendant)
+is_ascendant
+  (const struct sanim_node_data* data, const struct sanim_node_data* asc_data)
 {
-  ASSERT(node && ascendant);
-  while (node) {
-    if (node == ascendant) return 1;
-    node = node->father;
+  ASSERT(data && asc_data);
+  while (data) {
+    if (data == asc_data) return 1;
+    data = data->father;
   }
   return 0;
+}
+
+static double*
+node_get_transform(struct sanim_node_data* data,  double transform[16]) {
+  double tmp[12];
+  ASSERT(data && transform);
+  d33_rotation(tmp, SPLIT3(data->rotations));
+  d3_set(transform, tmp);
+  transform[3] = 0;
+  d3_set(transform + 4, tmp + 3);
+  transform[7] = 0;
+  d3_set(transform + 8, tmp + 6);
+  transform[11] = 0;
+  d3_set(transform + 12, data->translation);
+  transform[15] = 1;
+  return transform;
+}
+
+static void 
+d33_setd44(double dst[12], double src[16]) {
+  d3_set(dst, src);
+  d3_set(dst + 3, src + 4);
+  d3_set(dst + 6, src + 8);
+  d3_set(dst + 9, src + 12);
+  ASSERT(!src[3] && !src[7] && !src[11] && src[15] == 1);
 }
 
 /*******************************************************************************
 * Exported ssol_spectrum functions
 ******************************************************************************/
-res_T
-sanim_node_create
-  (struct sanim_device* dev,
-   struct sanim_node** out_node)
-{
-  struct sanim_node* node = NULL;
-  res_T res = RES_OK;
-
-  if (!dev || !out_node) {
-    res = RES_BAD_ARG;
-    goto error;
-  }
-
-  node = (struct sanim_node*)MEM_CALLOC
-    (dev->allocator, 1, sizeof(struct sanim_node));
-  if (!node) {
-    res = RES_MEM_ERR;
-    goto error;
-  }
-
-  darray_children_init(dev->allocator, &node->children);
-
-  SANIM(device_ref_get(dev));
-  node->dev = dev;
-  ref_init(&node->ref);
-
-exit:
-  if (out_node) *out_node = node;
-  return res;
-error:
-  if (node) {
-    SANIM(node_ref_put(node));
-    node = NULL;
-  }
-  goto exit;
-}
-
 res_T
 sanim_node_add_child
   (struct sanim_node* node,
@@ -96,45 +73,104 @@ sanim_node_add_child
   res_T res = RES_OK;
 
   if (!node || !child) return RES_BAD_ARG;
-  if (child->father) {
-    log_warning
-      (node->dev, "%s: the node has a father already.\n", FUNC_NAME);
-    return RES_BAD_ARG;
-  }
-  if (is_ascendant(node, child)) {
-    log_warning
-      (node->dev, "%s: creating a cycle.\n", FUNC_NAME);
-    return RES_BAD_ARG;
-  }
+  if (child->data->father) return RES_BAD_ARG;
+  if (is_ascendant(node->data, child->data)) return RES_BAD_ARG;
 
-  child->father = node;
-  res = darray_children_push_back(&node->children, &child);
+  child->data->father = node->data;
+  res = darray_children_push_back(&node->data->children, &child->data);
   if (res != RES_OK) {
     goto error;
   }
-  /* FIXME: use refcount for father/children? */
 
 exit:
   return res;
 error:
-  child->father = NULL;
+  if (child->data) {
+    child->data = NULL;
+  }
   goto exit;
 }
 
 res_T
-sanim_node_ref_get
+sanim_node_initialize
+  (struct mem_allocator* allocator,
+   struct sanim_node* node)
+{
+  struct mem_allocator* alloc;
+  res_T res = RES_OK;
+
+  if (!node) return RES_BAD_ARG;
+  alloc = allocator ? allocator : &mem_default_allocator;
+
+  node->data = MEM_CALLOC(alloc, 1, sizeof(struct sanim_node_data));
+  if (!node->data) {
+    res = RES_MEM_ERR;
+    goto error;
+  }
+
+  darray_children_init(alloc, &node->data->children);
+  node->data->father = NULL;
+  node->data->allocator = alloc;
+  d3_splat(node->data->translation, 0);
+  d3_splat(node->data->rotations, 0);
+
+exit:
+  return res;
+error:
+  if (node->data) {
+    darray_children_release(&node->data->children);
+    node->data = NULL;
+  }
+  goto exit;
+}
+
+res_T
+sanim_node_release
   (struct sanim_node* node)
 {
   if (!node) return RES_BAD_ARG;
-  ref_get(&node->ref);
+  if (node->data) {
+    darray_children_release(&node->data->children);
+    MEM_RM(node->data->allocator, node->data);
+  }
   return RES_OK;
 }
 
 res_T
-sanim_node_ref_put
-  (struct sanim_node* node)
+sanim_node_set_translation
+  (struct sanim_node* node,
+   const double translation[3])
 {
-  if (!node) return RES_BAD_ARG;
-  ref_put(&node->ref, node_release);
+  if (!node || !node->data || !translation) return RES_BAD_ARG;
+  d3_set(node->data->translation, translation);
+  return RES_OK;
+}
+
+res_T
+sanim_node_set_rotations
+  (struct sanim_node* node,
+   const double rotations[3])
+{
+  if (!node || !node->data || !rotations) return RES_BAD_ARG;
+  d3_set(node->data->rotations, rotations);
+  return RES_OK;
+}
+
+res_T
+sanim_node_get_world_transform
+  (struct sanim_node* node,
+   double transform[12])
+{
+  double world[16], tmp[16]; /* 4x4 column major matrix */
+  struct sanim_node_data* ptr;
+  if (!node || !node->data || !transform) return RES_BAD_ARG;
+  node_get_transform(node->data, world);
+  ptr = node->data->father;
+  while (ptr) {
+    node_get_transform(ptr, tmp);
+    d44_muld44(world, world, tmp);
+    ptr = ptr->father;
+  }
+  d33_setd44(transform, world);
   return RES_OK;
 }
