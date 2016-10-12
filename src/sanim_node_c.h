@@ -33,6 +33,7 @@ struct sanim_node_data {
   struct darray_children children;
   struct mem_allocator* allocator;
   struct sanim_pivot* pivot;
+  struct sanim_tracking* tracking;
 };
 
 

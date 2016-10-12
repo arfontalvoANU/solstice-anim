@@ -30,6 +30,20 @@ my_type_init(struct mem_allocator *allocator, struct my_type* t) {
 }
 
 res_T
+my_type_init_pivot
+  (struct mem_allocator *allocator, 
+   const struct sanim_pivot* pivot,
+   const struct sanim_tracking* tracking,
+   struct my_type* t)
+{
+  if (!t) return RES_BAD_ARG;
+  /* init my stuff */
+  t->my_data = 0;
+  /* init node stuff */
+  return sanim_node_initialize_pivot(allocator, pivot, tracking, &t->node);
+}
+
+res_T
 my_type_release(struct my_type* t) {
   if (!t) return RES_BAD_ARG;
   /* release my stuff */

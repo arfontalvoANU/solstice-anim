@@ -56,28 +56,67 @@ struct sanim_node {
 
 /* types to describe pivots */
 enum pivot_type {
-  SINGLE_AXIS,
-  TWO_AXIS,
+  PIVOT_SINGLE_AXIS,
+  PIVOT_TWO_AXIS,
 
-  PIVOT_TYPE_COUNT__
+  PIVOT_TYPES_COUNT__
 };
 
 struct sanim_pivot_1 {
-  double angle;
+  double ref_point[3];
+  double ref_normal[3];
 };
 
 struct sanim_pivot_2 {
-  double angle;
+  double spacing[3];
+  double ref_point[3];
+  /* ref_normal is <0,1,0> */
 };
 
 struct sanim_pivot {
   enum pivot_type type;
-  union data {
+  union {
     struct sanim_pivot_1 pivot1;
     struct sanim_pivot_2 pivot2;
   } data;
 };
 
+/* types to describe tracking policies */
+enum tracking_policy {
+  TRACKING_SUN, /* orient the device to face the sun */
+  TRACKING_POINT, /* direct the output flux towards a point */
+  TRACKING_LINE, /* direct the output flux on a line */
+  TRACKING_OUT_DIR, /* direct the output flux towards a given dir */
+
+  TRACKING_TYPES_COUNT
+};
+
+struct sanim_policy_sun {
+  char unused;
+};
+
+struct sanim_policy_point {
+  double pos[3];
+};
+
+struct sanim_policy_line {
+  double p1[3];
+  double p2[3];
+};
+
+struct sanim_policy_dir {
+  double u[3];
+};
+
+struct sanim_tracking {
+  enum tracking_policy policy;
+  union {
+    struct sanim_policy_sun sun;
+    struct sanim_policy_point point;
+    struct sanim_policy_line line;
+    struct sanim_policy_dir dir;
+  } data;
+};
 BEGIN_DECLS
 
 /*******************************************************************************
@@ -112,6 +151,7 @@ SANIM_API res_T
 sanim_node_initialize_pivot
   (struct mem_allocator* allocator, /* May be NULL <=> use default allocator */
    const struct sanim_pivot* pivot,
+   const struct sanim_tracking* tracking,
    struct sanim_node* node);
 
 SANIM_API res_T

@@ -120,11 +120,7 @@ sanim_node_initialize
   }
 
   darray_children_init(alloc, &node->data->children);
-  node->data->father = NULL;
   node->data->allocator = alloc;
-  node->data->pivot = NULL;
-  d3_splat(node->data->translation, 0);
-  d3_splat(node->data->rotations, 0);
 
 exit:
   return res;
@@ -140,23 +136,34 @@ res_T
 sanim_node_initialize_pivot
   (struct mem_allocator* allocator,
    const struct sanim_pivot* pivot,
+   const struct sanim_tracking* tracking,
    struct sanim_node* node)
 {
-  res_T res;
+  struct mem_allocator* alloc;
+  res_T res = RES_OK;
 
-  if (!pivot) return RES_BAD_ARG;
+  if (!node || !pivot || !tracking) return RES_BAD_ARG;
   res = sanim_node_initialize(allocator, node);
   if (res != RES_OK) goto error;
 
+  alloc = allocator ? allocator : &mem_default_allocator;
+  node->data->pivot = MEM_CALLOC(alloc, 1, sizeof(struct sanim_pivot));
+  if (!node->data->pivot) {
+    res = RES_MEM_ERR;
+    goto error;
+  }
+  node->data->tracking = MEM_CALLOC(alloc, 1, sizeof(struct sanim_tracking));
+  if (!node->data->tracking) {
+    res = RES_MEM_ERR;
+    goto error;
+  }
   *node->data->pivot = *pivot;
+  *node->data->tracking = *tracking;
 
 exit:
   return res;
 error:
-  if (node->data) {
-    darray_children_release(&node->data->children);
-    node->data = NULL;
-  }
+  sanim_node_release(node);
   goto exit;
 }
 
@@ -167,6 +174,12 @@ sanim_node_release
   if (!node) return RES_BAD_ARG;
   if (node->data) {
     darray_children_release(&node->data->children);
+    if (node->data->pivot) {
+      MEM_RM(node->data->allocator, node->data->pivot);
+    }
+    if (node->data->tracking) {
+      MEM_RM(node->data->allocator, node->data->tracking);
+    }
     MEM_RM(node->data->allocator, node->data);
   }
   return RES_OK;
