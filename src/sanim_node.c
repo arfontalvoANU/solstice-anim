@@ -37,6 +37,16 @@ is_ascendant
   return 0;
 }
 
+static int
+is_after_pivot(const struct sanim_node_data* data) {
+  ASSERT(data);
+  while (data) {
+    if (data->pivot) return 1;
+    data = data->father;
+  }
+  return 0;
+}
+
 static double*
 node_get_transform(struct sanim_node_data* data,  double transform[16]) {
   double tmp[12];
@@ -75,6 +85,7 @@ sanim_node_add_child
   if (!node || !child) return RES_BAD_ARG;
   if (child->data->father) return RES_BAD_ARG;
   if (is_ascendant(node->data, child->data)) return RES_BAD_ARG;
+  if (child->data->pivot && is_after_pivot(node->data)) return RES_BAD_ARG;
 
   child->data->father = node->data;
   res = darray_children_push_back(&node->data->children, &child->data);
@@ -111,8 +122,33 @@ sanim_node_initialize
   darray_children_init(alloc, &node->data->children);
   node->data->father = NULL;
   node->data->allocator = alloc;
+  node->data->pivot = NULL;
   d3_splat(node->data->translation, 0);
   d3_splat(node->data->rotations, 0);
+
+exit:
+  return res;
+error:
+  if (node->data) {
+    darray_children_release(&node->data->children);
+    node->data = NULL;
+  }
+  goto exit;
+}
+
+res_T
+sanim_node_initialize_pivot
+  (struct mem_allocator* allocator,
+   const struct sanim_pivot* pivot,
+   struct sanim_node* node)
+{
+  res_T res;
+
+  if (!pivot) return RES_BAD_ARG;
+  res = sanim_node_initialize(allocator, node);
+  if (res != RES_OK) goto error;
+
+  *node->data->pivot = *pivot;
 
 exit:
   return res;

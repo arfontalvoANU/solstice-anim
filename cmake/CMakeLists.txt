@@ -100,6 +100,7 @@ if(NOT NO_TEST)
   
   new_test(test_sanim_device)
   new_test(test_sanim_node_transform)
+  new_test(test_sanim_node_pivot)
 endif()
 
 ################################################################################

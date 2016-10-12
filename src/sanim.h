@@ -54,6 +54,30 @@ struct sanim_node {
   struct sanim_node_data* data;
 };
 
+/* types to describe pivots */
+enum pivot_type {
+  SINGLE_AXIS,
+  TWO_AXIS,
+
+  PIVOT_TYPE_COUNT__
+};
+
+struct sanim_pivot_1 {
+  double angle;
+};
+
+struct sanim_pivot_2 {
+  double angle;
+};
+
+struct sanim_pivot {
+  enum pivot_type type;
+  union data {
+    struct sanim_pivot_1 pivot1;
+    struct sanim_pivot_2 pivot2;
+  } data;
+};
+
 BEGIN_DECLS
 
 /*******************************************************************************
@@ -82,6 +106,12 @@ sanim_device_ref_put
 SANIM_API res_T
 sanim_node_initialize
   (struct mem_allocator* allocator, /* May be NULL <=> use default allocator */
+   struct sanim_node* node);
+
+SANIM_API res_T
+sanim_node_initialize_pivot
+  (struct mem_allocator* allocator, /* May be NULL <=> use default allocator */
+   const struct sanim_pivot* pivot,
    struct sanim_node* node);
 
 SANIM_API res_T

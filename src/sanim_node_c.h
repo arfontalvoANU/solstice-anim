@@ -17,6 +17,7 @@
 #define SANIM_NODE_C_H
 
 struct mem_allocator;
+struct sanim_pivot;
 
 #include <rsys/dynamic_array.h>
 
@@ -31,6 +32,7 @@ struct sanim_node_data {
   struct sanim_node_data* father; /* can be NULL: root node */
   struct darray_children children;
   struct mem_allocator* allocator;
+  struct sanim_pivot* pivot;
 };
 
 
