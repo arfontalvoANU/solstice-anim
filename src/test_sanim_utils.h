@@ -16,26 +16,55 @@
 #ifndef TEST_SANIM_UTILS_H
 #define TEST_SANIM_UTILS_H
 
-#include <rsys/mem_allocator.h>
-#include <stdio.h>
+#include "sanim.h"
 
-static INLINE void
-log_stream(const char* msg, void* ctx)
-{
-  ASSERT(msg);
-  (void) msg, (void) ctx;
-  printf("%s\n", msg);
-}
+#include <rsys/rsys.h>
 
-static INLINE void
-check_memory_allocator(struct mem_allocator* allocator)
-{
-  if (MEM_ALLOCATED_SIZE(allocator)) {
-    char dump[512];
-    MEM_DUMP(allocator, dump, sizeof(dump) / sizeof(char));
-    fprintf(stderr, "%s\n", dump);
-    FATAL("Memory leaks\n");
-  }
-}
+struct mem_allocator;
+
+/*******************************************************************************
+ * Define a custom type of node based on sanim_node
+ ******************************************************************************/
+struct my_type {
+  struct sanim_node node;
+  double my_data;
+  /* may be some ref count mechanism */
+};
+
+res_T
+my_type_init(struct mem_allocator *allocator, struct my_type* t);
+
+res_T
+my_type_release(struct my_type* t);
+
+res_T
+my_type_add_child(struct my_type* t, struct my_type* child);
+
+res_T
+my_type_set_translation(struct my_type* t, const double translation[3]);
+
+res_T
+my_type_set_rotations(struct my_type* t, const double rotations[3]);
+
+res_T
+my_type_get_world_transform(struct my_type* t, double transform[12]);
+
+/*******************************************************************************
+* Utilities
+******************************************************************************/
+char
+d3_is_zero_eps(const double v[3], const double eps);
+
+char
+d3_is_zero(const double v[3]);
+
+char
+d33_is_identity_eps(const double v[9], const double eps);
+
+void
+log_stream(const char* msg, void* ctx);
+
+void
+check_memory_allocator(struct mem_allocator* allocator);
 
 #endif /* TEST_SANIM_UTILS_H */
