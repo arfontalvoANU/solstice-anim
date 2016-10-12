@@ -168,7 +168,7 @@ sanim_node_get_world_transform
   ptr = node->data->father;
   while (ptr) {
     node_get_transform(ptr, tmp);
-    d44_muld44(world, world, tmp);
+    d44_muld44(world, tmp, world);
     ptr = ptr->father;
   }
   d33_setd44(transform, world);
