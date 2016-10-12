@@ -16,7 +16,6 @@
 #ifndef SANIM_NODE_C_H
 #define SANIM_NODE_C_H
 
-struct sanim_node_data;
 struct mem_allocator;
 
 #include <rsys/dynamic_array.h>

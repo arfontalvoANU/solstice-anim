@@ -17,6 +17,7 @@
 #define SANIM_H
 
 #include <rsys/rsys.h>
+#include <rsys/dynamic_array.h>
 
 /* Library symbol management */
 #if defined(SANIM_SHARED_BUILD) /* Build shared library */
