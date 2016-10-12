@@ -98,7 +98,7 @@ if(NOT NO_TEST)
   endfunction()
   
   new_test(test_sanim_device)
-  new_test(test_sanim_node)
+  new_test(test_sanim_node_transform)
 endif()
 
 ################################################################################
