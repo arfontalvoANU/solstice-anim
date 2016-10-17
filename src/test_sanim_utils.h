@@ -54,7 +54,7 @@ res_T
 my_type_set_rotations(struct my_type* t, const double rotations[3]);
 
 res_T
-my_type_get_world_transform(struct my_type* t, double transform[12]);
+my_type_get_transform(struct my_type* t, double transform[12]);
 
 /*******************************************************************************
 * Utilities

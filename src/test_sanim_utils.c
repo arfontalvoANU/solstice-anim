@@ -72,9 +72,9 @@ my_type_set_rotations(struct my_type* t, const double rotations[3]) {
 }
 
 res_T
-my_type_get_world_transform(struct my_type* t, double transform[12]) {
+my_type_get_transform(struct my_type* t, double transform[12]) {
   if (!t || !transform) return RES_BAD_ARG;
-  return sanim_node_get_world_transform(&t->node, transform);
+  return sanim_node_get_transform(&t->node, transform);
 }
 
 char

@@ -23,45 +23,110 @@ main(int argc, char** argv)
 {
   struct mem_allocator allocator;
   struct my_type t1, t2, t3;
-  struct sanim_pivot pivot;
+  struct sanim_pivot pivot1;
   struct sanim_tracking tracking;
-  double transl[3], rot[3], transform[12];
+  double transform[12];
+  double transl[3], rot[3], in_dir[3], n[3], tmp[3];
   (void) argc, (void) argv;
 
   mem_init_proxy_allocator(&allocator, &mem_default_allocator);
-  
-  /* test a typical use in my_type */
+
   tracking.policy = TRACKING_SUN;
-  pivot.type = PIVOT_SINGLE_AXIS;
-  d3_splat(pivot.data.pivot1.ref_point, 0);
-  d3(pivot.data.pivot1.ref_normal, 0, 1, 0);
+  pivot1.type = PIVOT_SINGLE_AXIS;
+  d3(pivot1.data.pivot1.ref_normal, 1, 0, 1);
+
+  CHECK(my_type_init_pivot(&allocator, NULL, &tracking, &t1), RES_BAD_ARG);
+  CHECK(my_type_init_pivot(&allocator, &pivot1, NULL, &t1), RES_BAD_ARG);
+  CHECK(my_type_init_pivot(&allocator, &pivot1, &tracking, NULL), RES_BAD_ARG);
+  /* ref_normal not in the YZ plane */
+  CHECK(my_type_init_pivot(&allocator, &pivot1, &tracking, &t1), RES_BAD_ARG);
+  d3(pivot1.data.pivot1.ref_normal, 0, 0, 1);
+  CHECK(my_type_init_pivot(&allocator, &pivot1, &tracking, &t1), RES_OK);
+  CHECK(my_type_release(&t1), RES_OK);
+  CHECK(my_type_init_pivot(NULL, &pivot1, &tracking, &t1), RES_OK);
+  CHECK(my_type_release(&t1), RES_OK);
+
   CHECK(my_type_init(&allocator, &t1), RES_OK);
-  CHECK(my_type_init_pivot(&allocator, &pivot, &tracking, &t2), RES_OK);
+  CHECK(my_type_init_pivot(&allocator, &pivot1, &tracking, &t2), RES_OK);
   CHECK(my_type_init(&allocator, &t3), RES_OK);
 
   CHECK(my_type_add_child(&t1, &t2), RES_OK);
   CHECK(my_type_add_child(&t2, &t3), RES_OK);
 
   d3_splat(transl, +1);
+  d3(rot, 0, 0, PI/2);
   CHECK(my_type_set_translation(&t1, transl), RES_OK);
-
-  d3_splat(transl, -1);
-  CHECK(my_type_set_translation(&t2, transl), RES_OK);
-
-  CHECK(my_type_get_world_transform(&t2, transform), RES_OK);
-  CHECK(d33_is_identity(transform), 1);
-  CHECK(d3_is_zero(transform + 9), 1);
-
-  d3(rot, PI, 0, 0);
   CHECK(my_type_set_rotations(&t1, rot), RES_OK);
-  CHECK(my_type_set_rotations(&t2, rot), RES_OK);
-  d3(transl, 0, +1, 0);
-  CHECK(my_type_set_translation(&t1, transl), RES_OK);
   CHECK(my_type_set_translation(&t2, transl), RES_OK);
+  CHECK(my_type_set_translation(&t3, transl), RES_OK);
 
-  CHECK(my_type_get_world_transform(&t2, transform), RES_OK);
-  CHECK(d33_is_identity_eps(transform, 1e-10), 1);
-  CHECK(d3_is_zero_eps(transform + 9, 1e-10), 1);
+  d3(in_dir, 0, 0.99, -0.1);
+  /* rotation axis is Y after positioning: cannot accomodate in_dir */
+  CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_BAD_ARG);
+
+  d3(in_dir, 1, 0, -1);
+  CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
+  CHECK(my_type_get_transform(&t3, transform), RES_OK);
+  d3(n, 0, 0, 1);
+  d33_muld3(n, transform, n);
+  CHECK(eq_eps(d3_dot(in_dir, n), -d3_normalize(tmp, in_dir), 1e-10), 1);
+  CHECK(d3_eq_eps(transform + 9, d3(tmp, -sqrt(2), 3, 2), 1e-10), 1);
+
+  CHECK(my_type_release(&t1), RES_OK);
+  CHECK(my_type_release(&t2), RES_OK);
+  CHECK(my_type_release(&t3), RES_OK);
+
+  tracking.policy = TRACKING_OUT_DIR;
+  pivot1.type = PIVOT_SINGLE_AXIS;
+  d3(pivot1.data.pivot1.ref_normal, 0, 0, 1);
+  d3(tracking.data.out_dir.u, 0, 1, 0);
+
+  CHECK(my_type_init(&allocator, &t1), RES_OK);
+  CHECK(my_type_init_pivot(&allocator, &pivot1, &tracking, &t2), RES_OK);
+  CHECK(my_type_init(&allocator, &t3), RES_OK);
+
+  CHECK(my_type_add_child(&t1, &t2), RES_OK);
+  CHECK(my_type_add_child(&t2, &t3), RES_OK);
+
+  CHECK(my_type_set_translation(&t1, transl), RES_OK);
+  CHECK(my_type_set_rotations(&t1, rot), RES_OK);
+  CHECK(my_type_set_translation(&t2, transl), RES_OK);
+  CHECK(my_type_set_translation(&t3, transl), RES_OK);
+  
+  d3(in_dir, 0, -1, -0.1);
+  /* rotation axis is Y after positioning: cannot accomodate <in_dir,out_dir> */
+  CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_BAD_ARG);
+
+  CHECK(my_type_release(&t1), RES_OK);
+  CHECK(my_type_release(&t2), RES_OK);
+  CHECK(my_type_release(&t3), RES_OK);
+
+  tracking.policy = TRACKING_OUT_DIR;
+  pivot1.type = PIVOT_SINGLE_AXIS;
+  d3(pivot1.data.pivot1.ref_normal, 0, 0, 1);
+  d3(tracking.data.out_dir.u, 1, 0, 1);
+
+  CHECK(my_type_init(&allocator, &t1), RES_OK);
+  CHECK(my_type_init_pivot(&allocator, &pivot1, &tracking, &t2), RES_OK);
+  CHECK(my_type_init(&allocator, &t3), RES_OK);
+
+  CHECK(my_type_add_child(&t1, &t2), RES_OK);
+  CHECK(my_type_add_child(&t2, &t3), RES_OK);
+
+  CHECK(my_type_set_translation(&t1, transl), RES_OK);
+  CHECK(my_type_set_rotations(&t1, rot), RES_OK);
+  CHECK(my_type_set_translation(&t2, transl), RES_OK);
+  CHECK(my_type_set_translation(&t3, transl), RES_OK);
+
+  d3(in_dir, 1, 0, -1);
+  CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
+  CHECK(my_type_get_transform(&t3, transform), RES_OK);
+  d3(n, 0, 0, 1);
+  d33_muld3(tmp, transform, n);
+  CHECK(d3_eq_eps(n, tmp, 1e-10), 1);
+  CHECK(d3_eq_eps(transform + 9, d3(tmp, -1, 3, 3), 1e-10), 1);
+
+  tracking.data.point.target_is_local = 0;
 
   CHECK(my_type_release(&t1), RES_OK);
   CHECK(my_type_release(&t2), RES_OK);

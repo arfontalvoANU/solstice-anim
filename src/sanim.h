@@ -44,14 +44,14 @@
 /* Forward declaration of external types */
 struct logger;
 struct mem_allocator;
-struct sanim_node_data;
+struct node_data;
 
 /* Opaque Solstice Anim types */
 struct sanim_device;
 
 /* sanim_node type for building own node types */
 struct sanim_node {
-  struct sanim_node_data* data;
+  struct node_data* data;
 };
 
 /* types to describe pivots */
@@ -63,13 +63,14 @@ enum pivot_type {
 };
 
 struct sanim_pivot_1 {
-  double ref_point[3];
-  double ref_normal[3];
+  double ref_point[3]; /* in local space */
+  /* rotation axis is X */
+  double ref_normal[3]; /* in local space */
 };
 
 struct sanim_pivot_2 {
   double spacing[3];
-  double ref_point[3];
+  double ref_point[3]; /* in local space */
   /* ref_normal is <0,1,0> */
 };
 
@@ -85,7 +86,6 @@ struct sanim_pivot {
 enum tracking_policy {
   TRACKING_SUN, /* orient the device to face the sun */
   TRACKING_POINT, /* direct the output flux towards a point */
-  TRACKING_LINE, /* direct the output flux on a line */
   TRACKING_OUT_DIR, /* direct the output flux towards a given dir */
 
   TRACKING_TYPES_COUNT
@@ -96,16 +96,12 @@ struct sanim_policy_sun {
 };
 
 struct sanim_policy_point {
-  double pos[3];
+  double target[3];
+  char target_is_local;  /* is target in local space? */
 };
 
-struct sanim_policy_line {
-  double p1[3];
-  double p2[3];
-};
-
-struct sanim_policy_dir {
-  double u[3];
+struct sanim_policy_out_dir {
+  double u[3]; /* in world space */
 };
 
 struct sanim_tracking {
@@ -113,8 +109,7 @@ struct sanim_tracking {
   union {
     struct sanim_policy_sun sun;
     struct sanim_policy_point point;
-    struct sanim_policy_line line;
-    struct sanim_policy_dir dir;
+    struct sanim_policy_out_dir out_dir;
   } data;
 };
 BEGIN_DECLS
@@ -155,6 +150,11 @@ sanim_node_initialize_pivot
    struct sanim_node* node);
 
 SANIM_API res_T
+sanim_node_solve_pivot
+  (struct sanim_node* node,
+   const double in_dir[3]);
+
+SANIM_API res_T
 sanim_node_release
   (struct sanim_node* node);
 
@@ -174,9 +174,9 @@ sanim_node_set_rotations
    const double rotations[3]); /* XYZ convention */
 
 SANIM_API res_T
-sanim_node_get_world_transform
+sanim_node_get_transform
   (struct sanim_node* node,
-   double transform[12]); /* 3x4 column major matrix */
+   double transform[12]);  /* 3x4 column major matrix */
 
 END_DECLS
 

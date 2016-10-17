@@ -17,23 +17,30 @@
 #define SANIM_NODE_C_H
 
 struct mem_allocator;
-struct sanim_pivot;
+
+#include "sanim.h"
 
 #include <rsys/dynamic_array.h>
 
 /* Define the darray_children data structure */
 #define DARRAY_NAME children
-#define DARRAY_DATA struct sanim_node_data*
+#define DARRAY_DATA struct sanim_node*
 #include <rsys/dynamic_array.h>
 
-struct sanim_node_data {
+/* supplemental data for nodes that are pivots */
+struct pivot_data {
+  double pivot_angles[3];
+  struct sanim_pivot pivot;
+  struct sanim_tracking tracking;
+};
+
+struct node_data {
   double translation[3];
   double rotations[3];
-  struct sanim_node_data* father; /* can be NULL: root node */
+  struct sanim_node* father; /* can be NULL: root node */
   struct darray_children children;
   struct mem_allocator* allocator;
-  struct sanim_pivot* pivot;
-  struct sanim_tracking* tracking;
+  struct pivot_data* pivot_data;
 };
 
 

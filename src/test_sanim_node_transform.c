@@ -23,7 +23,8 @@ main(int argc, char** argv)
 {
   struct mem_allocator allocator;
   struct my_type t1, t2, t3, t;
-  double transl[3], rot[3], transform[12], transform2[12];
+  double transl[3], rot[3];
+  double transform[12], transform_[12];
   (void) argc, (void) argv;
 
   mem_init_proxy_allocator(&allocator, &mem_default_allocator);
@@ -51,9 +52,9 @@ main(int argc, char** argv)
   d3_splat(transl, -1);
   CHECK(my_type_set_translation(&t2, transl), RES_OK);
 
-  CHECK(my_type_get_world_transform(NULL, transform), RES_BAD_ARG);
-  CHECK(my_type_get_world_transform(&t2, NULL), RES_BAD_ARG);
-  CHECK(my_type_get_world_transform(&t2, transform), RES_OK);
+  CHECK(my_type_get_transform(NULL, transform), RES_BAD_ARG);
+  CHECK(my_type_get_transform(&t2, NULL), RES_BAD_ARG);
+  CHECK(my_type_get_transform(&t2, transform), RES_OK);
   CHECK(d33_is_identity(transform), 1);
   CHECK(d3_is_zero(transform + 9), 1);
 
@@ -66,19 +67,56 @@ main(int argc, char** argv)
   CHECK(my_type_set_translation(&t1, transl), RES_OK);
   CHECK(my_type_set_translation(&t2, transl), RES_OK);
 
-  CHECK(my_type_get_world_transform(&t2, transform), RES_OK);
+  CHECK(my_type_get_transform(&t2, transform), RES_OK);
   CHECK(d33_is_identity_eps(transform, 1e-10), 1);
   CHECK(d3_is_zero_eps(transform + 9, 1e-10), 1);
 
-  /* check 1 node with 3 rotations VS 3 chained nodes with 1 rotation each */
-  d3(rot, 0.17, -0.52, 0.31);
+  /* check translation & 1 rotation in a single node VS in 2 chained nodes */
+  d3(rot, 0.17, 0, 0);
   d3(transl, 0.3, 2, -1);
   CHECK(my_type_init(&allocator, &t), RES_OK);
   CHECK(my_type_set_translation(&t, transl), RES_OK);
   CHECK(my_type_set_rotations(&t, rot), RES_OK);
-  CHECK(my_type_get_world_transform(&t, transform), RES_OK);
+  CHECK(my_type_get_transform(&t, transform), RES_OK);
   CHECK(my_type_init(&allocator, &t3), RES_OK);
   CHECK(my_type_add_child(&t2, &t3), RES_OK);
+  d3(rot, 0, 0, 0);
+  CHECK(my_type_set_translation(&t1, transl), RES_OK);
+  CHECK(my_type_set_rotations(&t1, rot), RES_OK);
+  d3(transl, 0, 0, 0);
+  d3(rot, 0.17, 0, 0);
+  CHECK(my_type_set_translation(&t2, transl), RES_OK);
+  CHECK(my_type_set_rotations(&t2, rot), RES_OK);
+  CHECK(my_type_get_transform(&t2, transform_), RES_OK);
+  CHECK(d33_eq_eps(transform, transform_, 1e-10), 1);
+  CHECK(d3_eq_eps(transform + 9, transform_ + 9, 1e-10), 1);
+
+  /* check translation & 2 rotations in a single node VS in 2 chained nodes */
+  d3(rot, 0.17, -0.52, 0);
+  d3(transl, 0.3, 2, -1);
+  CHECK(my_type_set_translation(&t, transl), RES_OK);
+  CHECK(my_type_set_rotations(&t, rot), RES_OK);
+  CHECK(my_type_get_transform(&t, transform), RES_OK);
+  d3(rot, 0, 0, 0);
+  CHECK(my_type_set_translation(&t1, transl), RES_OK);
+  CHECK(my_type_set_rotations(&t1, rot), RES_OK);
+  d3(transl, 0, 0, 0);
+  d3(rot, 0.17, 0, 0);
+  CHECK(my_type_set_translation(&t2, transl), RES_OK);
+  CHECK(my_type_set_rotations(&t2, rot), RES_OK);
+  d3(rot, 0, -0.52, 0);
+  CHECK(my_type_set_translation(&t3, transl), RES_OK);
+  CHECK(my_type_set_rotations(&t3, rot), RES_OK);
+  CHECK(my_type_get_transform(&t3, transform_), RES_OK);
+  CHECK(d33_eq_eps(transform, transform_, 1e-10), 1);
+  CHECK(d3_eq_eps(transform + 9, transform_ + 9, 1e-10), 1);
+
+  /* check 1 node with 3 rotations VS 3 chained nodes with 1 rotation each */
+  d3(rot, 0.17, -0.52, 0.31);
+  d3(transl, 0.3, 2, -1);
+  CHECK(my_type_set_translation(&t, transl), RES_OK);
+  CHECK(my_type_set_rotations(&t, rot), RES_OK);
+  CHECK(my_type_get_transform(&t, transform), RES_OK);
   d3(rot, 0.17, 0, 0);
   CHECK(my_type_set_translation(&t1, transl), RES_OK);
   CHECK(my_type_set_rotations(&t1, rot), RES_OK);
@@ -89,8 +127,9 @@ main(int argc, char** argv)
   d3(rot, 0, 0, 0.31);
   CHECK(my_type_set_translation(&t3, transl), RES_OK);
   CHECK(my_type_set_rotations(&t3, rot), RES_OK);
-  CHECK(my_type_get_world_transform(&t3, transform2), RES_OK);
-  CHECK(d33_eq_eps(transform, transform2, 1e-10), 1);
+  CHECK(my_type_get_transform(&t3, transform_), RES_OK);
+  CHECK(d33_eq_eps(transform, transform_, 1e-10), 1);
+  CHECK(d3_eq_eps(transform + 9, transform_ + 9, 1e-10), 1);
 
   CHECK(my_type_release(&t1), RES_OK);
   CHECK(my_type_release(&t2), RES_OK);
