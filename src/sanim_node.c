@@ -64,12 +64,19 @@ d34_set_identity(double dst[12]) {
 }
 
 static double*
+set_pivot_transform(const double angles[3], double transform[12]) {
+  ASSERT(angles && transform);
+  d33_rotation(transform, SPLIT3(angles));
+  d3_splat(transform + 9, 0);
+  return transform;
+}
+
+static double*
 set_node_transform(struct sanim_node* node, const char include_pivot, double transform[12]) {
   double tmp[12];
   ASSERT(node && node->data && transform);
   if (include_pivot && node->data->pivot_data) {
-    d33_rotation(transform, SPLIT3(node->data->pivot_data->pivot_angles));
-    d3_splat(transform + 9, 0);
+    set_pivot_transform(node->data->pivot_data->pivot_angles, transform);
     d33_rotation(tmp, SPLIT3(node->data->rotations));
     d3_set(tmp + 9, node->data->translation);
     d34_muld34(transform, tmp, transform);
@@ -86,8 +93,7 @@ compose_node_transform(struct sanim_node* node, double transform[12]) {
   double tmp[12];
   ASSERT(node && node->data && transform);
   if (node->data->pivot_data) {
-    d33_rotation(tmp, SPLIT3(node->data->pivot_data->pivot_angles));
-    d3_splat(tmp + 9, 0);
+    set_pivot_transform(node->data->pivot_data->pivot_angles, tmp);
     d34_muld34(transform, tmp, transform);
   }
   d33_rotation(tmp, SPLIT3(node->data->rotations));
@@ -123,7 +129,7 @@ compute_single_axis_angle
     /* cannot be obtained by X-rotate */
     return RES_BAD_ARG;
   }
-
+  /* solve in the YZ plane */
   *angle =
     atan2(-(ref_normal[2] * rotated_n[1] - ref_normal[1] * rotated_n[2]),
       ref_normal[1] * rotated_n[1] + ref_normal[2] * rotated_n[2]);
@@ -157,19 +163,22 @@ pivot_solve_single_axis_sun
 
   /* rotated_n = -local_in */
   d3_muld(rotated_n, local_in, -1);
+  ASSERT(d3_is_normalized(rotated_n));
 
   return compute_single_axis_angle(ref_normal, rotated_n, angle);
 }
 
 FINLINE res_T
-pivot_solve_single_axis_point
+pivot_solve_single_axis_line
   (struct sanim_node* node,
    const double in_dir[3])
 {
-  double mat[12], inv[12];
-  double local_in[3], rotated_n[3], local_target[3];
+  res_T res = RES_OK;
+  double mat[12], inv[9];
+  double local_in[3], rotated_n[3], local_out[3], local_target[3], ref_point[3];
   const double* ref_normal;
-  double* angle;
+  double angles[3], previous_angle, delta;
+  int cpt = 0;
   ASSERT(node && in_dir);
   ASSERT(node->data->pivot_data);
   ASSERT(node->data->pivot_data->pivot.type == PIVOT_SINGLE_AXIS);
@@ -178,7 +187,7 @@ pivot_solve_single_axis_point
 
   ref_normal = node->data->pivot_data->pivot.data.pivot1.ref_normal;
   ASSERT(d3_is_normalized(ref_normal));
-  angle = &node->data->pivot_data->pivot_angles[0]; /* X-rotate */
+  d3_set(ref_point, node->data->pivot_data->pivot.data.pivot1.ref_point);
 
   /* get in_dir in local space */
   node_get_transform(node, 0, mat);
@@ -190,14 +199,40 @@ pivot_solve_single_axis_point
     d3_set(local_target, node->data->pivot_data->tracking.data.point.target);
   }
   else {
-    d33_muld3(local_target, inv, node->data->pivot_data->tracking.data.point.target);
-    d3_add(local_target, local_target, inv + 9);
+    d3_sub(local_target, node->data->pivot_data->tracking.data.point.target, mat + 9);
+    d33_muld3(local_target, inv, local_target);
   }
 
-  /* compute rotated_n */
+  /* TODO: get rid of iterative solving */
+  d3_splat(angles, 0);
+  do {
+    double pivot[12];
+    /* compute rotated_n */
+    d3_sub(local_out, local_target, ref_point);
+    if (0 == d3_normalize(local_out, local_out)) {
+      /* cannot target so close to the device */
+      return RES_BAD_ARG;
+    }
+    /* compute rotated_n = bisectrix of local_in and out_dir */
+    d3_sub(rotated_n, local_out, local_in);
+    if (0 == d3_normalize(rotated_n, rotated_n)) {
+      /* cannot be obtained by X-rotate */
+      return RES_BAD_ARG;
+    }
+    previous_angle = angles[0];
+    res = compute_single_axis_angle(ref_normal, rotated_n, angles); /* X-rotate */
+    if (res != RES_OK) return res;
+    delta = fabs(previous_angle - angles[0]);
+    if (delta < 1e-10 || ++cpt == 25) break;
+    set_pivot_transform(angles, pivot);
+    /* update ref_point */
+    d33_muld3(ref_point, pivot, node->data->pivot_data->pivot.data.pivot1.ref_point);
+    /* no d3_add(ref_point, ref_point, pivot + 9) as pivot has no offset to add */
+  } while (1);
 
-
-  return compute_single_axis_angle(ref_normal, rotated_n, angle);
+  ASSERT(angles[1] == 0 && angles[2] == 0);
+  d3_set(node->data->pivot_data->pivot_angles, angles);
+  return RES_OK;
 }
 
 FINLINE res_T
@@ -218,13 +253,13 @@ pivot_solve_single_axis_dir
 
   ref_normal = node->data->pivot_data->pivot.data.pivot1.ref_normal;
   ASSERT(d3_is_normalized(ref_normal));
-  angle = &node->data->pivot_data->pivot_angles[0]; /* X-rotate */
 
   /* get in_dir and out_dir in local space */
   node_get_transform(node, 0, mat);
   d33_transpose(inv, mat); /* no scale factors: inverse is transpose */
   d33_muld3(local_in, inv, in_dir);
   d33_muld3(local_out, inv, node->data->pivot_data->tracking.data.out_dir.u);
+  ASSERT(d3_is_normalized(local_out));
 
   /* compute rotated_n = bisectrix of local_in and out_dir */
   d3_sub(rotated_n, local_out, local_in);
@@ -233,6 +268,7 @@ pivot_solve_single_axis_dir
     return RES_BAD_ARG;
   }
 
+  angle = &node->data->pivot_data->pivot_angles[0]; /* X-rotate */
   return compute_single_axis_angle(ref_normal, rotated_n, angle);
 }
 
@@ -251,7 +287,8 @@ pivot_solve_single_axis
     res = pivot_solve_single_axis_sun(node, in_dir);
     break;
   case TRACKING_POINT:
-    res = pivot_solve_single_axis_point(node, in_dir);
+    /* track the X line that includes ref_point */
+    res = pivot_solve_single_axis_line(node, in_dir);
     break;
   case TRACKING_OUT_DIR:
     res = pivot_solve_single_axis_dir(node, in_dir);
@@ -351,6 +388,7 @@ copy_and_normalise_pivot_data
     break;
   case TRACKING_POINT:
     d3_set(dest->tracking.data.point.target, tracking->data.point.target);
+    dest->tracking.data.point.target_is_local = tracking->data.point.target_is_local;
     break;
   case TRACKING_OUT_DIR:
     if (!d3_normalize(dest->tracking.data.out_dir.u, tracking->data.out_dir.u))

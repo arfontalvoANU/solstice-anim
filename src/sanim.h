@@ -62,10 +62,10 @@ enum pivot_type {
   PIVOT_TYPES_COUNT__
 };
 
+/* pivot with X rotation axis */
 struct sanim_pivot_1 {
-  double ref_point[3]; /* in local space */
-  /* rotation axis is X */
-  double ref_normal[3]; /* in local space */
+  double ref_point[3]; /* in post-pivot local space */
+  double ref_normal[3]; /* normal without rotation; used to compute output dir */
 };
 
 struct sanim_pivot_2 {
@@ -96,8 +96,10 @@ struct sanim_policy_sun {
 };
 
 struct sanim_policy_point {
+  /* target can be in local space (ie in the same system than the pivot)
+   * or in world space */
   double target[3];
-  char target_is_local;  /* is target in local space? */
+  char target_is_local;
 };
 
 struct sanim_policy_out_dir {
