@@ -72,7 +72,11 @@ set_pivot_transform(const double angles[3], double transform[12]) {
 }
 
 static double*
-set_node_transform(struct sanim_node* node, const char include_pivot, double transform[12]) {
+set_node_transform
+  (struct sanim_node* node,
+   const char include_pivot,
+   double transform[12])
+{
   double tmp[12];
   ASSERT(node && node->data && transform);
   if (include_pivot && node->data->pivot_data) {
@@ -103,7 +107,10 @@ compose_node_transform(struct sanim_node* node, double transform[12]) {
 }
 
 static void
-node_get_transform(struct sanim_node* node, const char include_own_pivot, double transform[12])
+node_get_transform
+  (struct sanim_node* node,
+   const char include_own_pivot,
+   double transform[12])
 {
   struct sanim_node* ptr;
   ASSERT(node && node->data && transform);
@@ -115,26 +122,21 @@ node_get_transform(struct sanim_node* node, const char include_own_pivot, double
   }
 }
 
-static res_T
+static void
 compute_single_axis_angle
-(const double ref_normal[3],
-  const double rotated_n[3],
-  double* angle )
+  (const double ref_normal[3],
+   const double rotated_n[3],
+   double* angle )
 {
   ASSERT(ref_normal && rotated_n && angle);
   ASSERT(d3_is_normalized(rotated_n));
   ASSERT(d3_is_normalized(ref_normal));
-  ASSERT(ref_normal[0] == 0); /* ref_normal in the YZ plane */
-  if (fabs(rotated_n[0]) > 0.9) {
-    /* cannot be obtained by X-rotate */
-    return RES_BAD_ARG;
-  }
-  /* solve in the YZ plane */
+  /* normals should be in the YZ plane */
+  ASSERT(ref_normal[0] == 0);
+  ASSERT(rotated_n[0] == 0);
   *angle =
     atan2(-(ref_normal[2] * rotated_n[1] - ref_normal[1] * rotated_n[2]),
       ref_normal[1] * rotated_n[1] + ref_normal[2] * rotated_n[2]);
-
-  return RES_OK;
 }
 
 static res_T
@@ -161,11 +163,18 @@ pivot_solve_single_axis_sun
   d33_transpose(inv, mat); /* no scale factors: inverse is transpose */
   d33_muld3(local_in, inv, in_dir);
 
+  /* solve in the YZ plane */
+  local_in[0] = 0;
+  if (d3_normalize(local_in, local_in) < 0.25) {
+    /* not really in the YZ-plane */
+    return RES_BAD_ARG;
+  }
+
   /* rotated_n = -local_in */
   d3_muld(rotated_n, local_in, -1);
-  ASSERT(d3_is_normalized(rotated_n));
 
-  return compute_single_axis_angle(ref_normal, rotated_n, angle);
+  compute_single_axis_angle(ref_normal, rotated_n, angle);
+  return RES_OK;
 }
 
 FINLINE res_T
@@ -173,7 +182,6 @@ pivot_solve_single_axis_line
   (struct sanim_node* node,
    const double in_dir[3])
 {
-  res_T res = RES_OK;
   double mat[12], inv[9];
   double local_in[3], rotated_n[3], local_out[3], local_target[3], ref_point[3];
   const double* ref_normal;
@@ -209,19 +217,29 @@ pivot_solve_single_axis_line
     double pivot[12];
     /* compute rotated_n */
     d3_sub(local_out, local_target, ref_point);
-    if (0 == d3_normalize(local_out, local_out)) {
-      /* cannot target so close to the device */
+
+    /* solve in the YZ plane */
+    local_in[0] = 0;
+    if (d3_normalize(local_in, local_in) < 0.25) {
+      /* not really in the YZ-plane */
       return RES_BAD_ARG;
     }
-    /* compute rotated_n = bisectrix of local_in and out_dir */
+    local_out[0] = 0;
+    if (d3_normalize(local_out, local_out) < 0.25) {
+      /* not really in the YZ-plane */
+      return RES_BAD_ARG;
+    }
+
+    /* rotated_n = bisectrix of local_in and out_dir */
     d3_sub(rotated_n, local_out, local_in);
-    if (0 == d3_normalize(rotated_n, rotated_n)) {
-      /* cannot be obtained by X-rotate */
+    if (d3_normalize(rotated_n, rotated_n) < 1e-4) {
+      /* tangent rays */
       return RES_BAD_ARG;
     }
+    ASSERT(rotated_n[0] == 0);
+
     previous_angle = angles[0];
-    res = compute_single_axis_angle(ref_normal, rotated_n, angles); /* X-rotate */
-    if (res != RES_OK) return res;
+    compute_single_axis_angle(ref_normal, rotated_n, angles); /* X-rotate */
     delta = fabs(previous_angle - angles[0]);
     if (delta < 1e-10 || ++cpt == 25) break;
     set_pivot_transform(angles, pivot);
@@ -259,17 +277,30 @@ pivot_solve_single_axis_dir
   d33_transpose(inv, mat); /* no scale factors: inverse is transpose */
   d33_muld3(local_in, inv, in_dir);
   d33_muld3(local_out, inv, node->data->pivot_data->tracking.data.out_dir.u);
-  ASSERT(d3_is_normalized(local_out));
 
-  /* compute rotated_n = bisectrix of local_in and out_dir */
-  d3_sub(rotated_n, local_out, local_in);
-  if (0 == d3_normalize(rotated_n, rotated_n)) {
-    /* cannot be obtained by X-rotate */
+  /* solve in the YZ plane */
+  local_in[0] = 0;
+  if (d3_normalize(local_in, local_in) < 0.25) {
+    /* not really in the YZ-plane */
+    return RES_BAD_ARG;
+  }
+  local_out[0] = 0;
+  if (d3_normalize(local_out, local_out) < 0.25) {
+    /* not really in the YZ-plane */
     return RES_BAD_ARG;
   }
 
+  /* rotated_n = bisectrix of local_in and out_dir */
+  d3_sub(rotated_n, local_out, local_in);
+  if (d3_normalize(rotated_n, rotated_n) < 1e-4) {
+    /* tangent rays */
+    return RES_BAD_ARG;
+  }
+  ASSERT(rotated_n[0] == 0);
+
   angle = &node->data->pivot_data->pivot_angles[0]; /* X-rotate */
-  return compute_single_axis_angle(ref_normal, rotated_n, angle);
+  compute_single_axis_angle(ref_normal, rotated_n, angle);
+  return RES_OK;
 }
 
 FINLINE res_T

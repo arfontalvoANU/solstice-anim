@@ -68,12 +68,11 @@ main(int argc, char** argv)
   /* rotation axis is Y after positioning: cannot accomodate in_dir */
   CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_BAD_ARG);
 
-  d3(in_dir, 1, 0, -1);
+  d3(in_dir, 1, 0.2, -1);
   CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
   CHECK(my_type_get_transform(&t3, transform), RES_OK);
-  d3(n, 0, 0, 1);
-  d33_muld3(n, transform, n);
-  CHECK(eq_eps(d3_dot(in_dir, n), -d3_normalize(tmp, in_dir), 1e-10), 1);
+  d33_muld3(n, transform, pivot1.data.pivot1.ref_normal);
+  CHECK(d3_eq_eps(n, d3(tmp, -sqrt(2) / 2, 0, +sqrt(2) / 2), 1e-10), 1);
   CHECK(d3_eq_eps(transform + 9, d3(tmp, -sqrt(2), 3, 2), 1e-10), 1);
 
   CHECK(my_type_release(&t1), RES_OK);
@@ -124,13 +123,12 @@ main(int argc, char** argv)
   CHECK(my_type_set_translation(&t2, transl), RES_OK);
   CHECK(my_type_set_translation(&t3, transl), RES_OK);
 
-  d3(in_dir, 1, 0, -1);
+  d3(in_dir, 1, -0.3, -1);
   CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
   CHECK(my_type_get_transform(&t3, transform), RES_OK);
-  d3(n, 0, 0, 1);
-  d33_muld3(tmp, transform, n);
-  CHECK(d3_eq_eps(n, tmp, 1e-10), 1);
-  CHECK(d3_eq_eps(transform + 9, d3(tmp, -1, 3, 3), 1e-10), 1);
+  d33_muld3(n, transform, pivot1.data.pivot1.ref_normal);
+  CHECK(d3_eq_eps(pivot1.data.pivot1.ref_normal, n, 1e-10), 1);
+  CHECK(d3_eq_eps(transform + 9, d3(n, -1, 3, 3), 1e-10), 1);
 
   CHECK(my_type_release(&t1), RES_OK);
   CHECK(my_type_release(&t2), RES_OK);
@@ -157,7 +155,7 @@ main(int argc, char** argv)
   CHECK(my_type_set_translation(&t2, transl), RES_OK);
   CHECK(my_type_set_translation(&t3, transl), RES_OK);
 
-  d3(in_dir, 1, 0, 0);
+  d3(in_dir, 1, 0.1, 0);
   CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
   CHECK(my_type_get_transform(&t3, transform), RES_OK);
   d3(n, 0, 0, 1);
@@ -189,7 +187,7 @@ main(int argc, char** argv)
   CHECK(my_type_set_translation(&t2, transl), RES_OK);
   CHECK(my_type_set_translation(&t3, transl), RES_OK);
 
-  d3(in_dir, 1, 0, 0);
+  d3(in_dir, 1, -0.5, 0);
   CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
   CHECK(my_type_get_transform(&t3, transform), RES_OK);
   d3(n, 0, 0, 1);
