@@ -68,9 +68,10 @@ struct sanim_pivot_1 {
   double ref_normal[3]; /* normal without rotation; used to compute output dir */
 };
 
+/* pivot with Z then X rotation axis */
 struct sanim_pivot_2 {
-  double spacing[3];
-  double ref_point[3]; /* in local space */
+  double spacing; /* distance between Z and X rotation axis */
+  double ref_point[3]; /* in post-pivot local space */
   /* ref_normal is <0,1,0> */
 };
 

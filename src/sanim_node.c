@@ -64,10 +64,45 @@ d34_set_identity(double dst[12]) {
 }
 
 static double*
-set_pivot_transform(const double angles[3], double transform[12]) {
-  ASSERT(angles && transform);
-  d33_rotation(transform, SPLIT3(angles));
+set_Xpivot_transform
+  (const double angle,
+   const double spacing,
+   double transform[12])
+{
+  double offset[3];
+  ASSERT(transform);
+  d33_rotation_pitch(transform, angle);
+  d3_set(transform + 9, d3(offset, 0, spacing, 0));
+  return transform;
+}
+
+static double*
+set_Zpivot_transform(const double angle, double transform[12]) {
+  ASSERT(transform);
+  d33_rotation_roll(transform, angle);
   d3_splat(transform + 9, 0);
+  return transform;
+}
+
+static double*
+set_pivot_transform(const struct pivot_data* pivot, double transform[12]) {
+  double tmp[12];
+  ASSERT(pivot && transform);
+  switch (pivot->pivot.type) {
+  case PIVOT_SINGLE_AXIS: {
+    ASSERT(pivot->angleZ == 0);
+    set_Xpivot_transform(pivot->angleX, 0, transform);
+    break;
+  }
+  case PIVOT_TWO_AXIS: {
+    set_Xpivot_transform(
+      pivot->angleX, pivot->pivot.data.pivot2.spacing, transform);
+    set_Zpivot_transform(pivot->angleZ, tmp);
+    d34_muld34(transform, tmp, transform);
+    break;
+  }
+  default: FATAL("Unreachable code.\n"); break;
+  }
   return transform;
 }
 
@@ -80,7 +115,7 @@ set_node_transform
   double tmp[12];
   ASSERT(node && node->data && transform);
   if (include_pivot && node->data->pivot_data) {
-    set_pivot_transform(node->data->pivot_data->pivot_angles, transform);
+    set_pivot_transform(node->data->pivot_data, transform);
     d33_rotation(tmp, SPLIT3(node->data->rotations));
     d3_set(tmp + 9, node->data->translation);
     d34_muld34(transform, tmp, transform);
@@ -97,7 +132,7 @@ compose_node_transform(struct sanim_node* node, double transform[12]) {
   double tmp[12];
   ASSERT(node && node->data && transform);
   if (node->data->pivot_data) {
-    set_pivot_transform(node->data->pivot_data->pivot_angles, tmp);
+    set_pivot_transform(node->data->pivot_data, tmp);
     d34_muld34(transform, tmp, transform);
   }
   d33_rotation(tmp, SPLIT3(node->data->rotations));
@@ -147,7 +182,6 @@ pivot_solve_single_axis_sun
   double mat[12], inv[12];
   double local_in[3], rotated_n[3];
   const double* ref_normal;
-  double* angle;
   ASSERT(node && in_dir);
   ASSERT(node->data->pivot_data);
   ASSERT(node->data->pivot_data->pivot.type == PIVOT_SINGLE_AXIS);
@@ -156,7 +190,6 @@ pivot_solve_single_axis_sun
 
   ref_normal = node->data->pivot_data->pivot.data.pivot1.ref_normal;
   ASSERT(d3_is_normalized(ref_normal));
-  angle = &node->data->pivot_data->pivot_angles[0]; /* X-rotate */
   
   /* get in_dir in local space */
   node_get_transform(node, 0, mat);
@@ -173,7 +206,8 @@ pivot_solve_single_axis_sun
   /* rotated_n = -local_in */
   d3_muld(rotated_n, local_in, -1);
 
-  compute_single_axis_angle(ref_normal, rotated_n, angle);
+  compute_single_axis_angle(
+    ref_normal, rotated_n, &node->data->pivot_data->angleX);
   return RES_OK;
 }
 
@@ -185,7 +219,7 @@ pivot_solve_single_axis_line
   double mat[12], inv[9];
   double local_in[3], rotated_n[3], local_out[3], local_target[3], ref_point[3];
   const double* ref_normal;
-  double angles[3], previous_angle, delta;
+  double angle, previous_angle, delta;
   int cpt = 0;
   ASSERT(node && in_dir);
   ASSERT(node->data->pivot_data);
@@ -211,8 +245,7 @@ pivot_solve_single_axis_line
     d33_muld3(local_target, inv, local_target);
   }
 
-  /* TODO: get rid of iterative solving */
-  d3_splat(angles, 0);
+  angle = 0;
   do {
     double pivot[12];
     /* compute rotated_n */
@@ -238,18 +271,17 @@ pivot_solve_single_axis_line
     }
     ASSERT(rotated_n[0] == 0);
 
-    previous_angle = angles[0];
-    compute_single_axis_angle(ref_normal, rotated_n, angles); /* X-rotate */
-    delta = fabs(previous_angle - angles[0]);
+    previous_angle = angle;
+    compute_single_axis_angle(ref_normal, rotated_n, &angle);
+    delta = fabs(previous_angle - angle);
     if (delta < 1e-10 || ++cpt == 25) break;
-    set_pivot_transform(angles, pivot);
+    set_Xpivot_transform(angle, 0, pivot);
     /* update ref_point */
     d33_muld3(ref_point, pivot, node->data->pivot_data->pivot.data.pivot1.ref_point);
     /* no d3_add(ref_point, ref_point, pivot + 9) as pivot has no offset to add */
   } while (1);
 
-  ASSERT(angles[1] == 0 && angles[2] == 0);
-  d3_set(node->data->pivot_data->pivot_angles, angles);
+  node->data->pivot_data->angleX = angle;
   return RES_OK;
 }
 
@@ -261,7 +293,6 @@ pivot_solve_single_axis_dir
   double mat[12], inv[12];
   double local_in[3], rotated_n[3], local_out[3];
   const double* ref_normal;
-  double* angle;
   ASSERT(node && in_dir);
   ASSERT(node->data->pivot_data);
   ASSERT(node->data->pivot_data->pivot.type == PIVOT_SINGLE_AXIS);
@@ -298,8 +329,8 @@ pivot_solve_single_axis_dir
   }
   ASSERT(rotated_n[0] == 0);
 
-  angle = &node->data->pivot_data->pivot_angles[0]; /* X-rotate */
-  compute_single_axis_angle(ref_normal, rotated_n, angle);
+  compute_single_axis_angle(
+    ref_normal, rotated_n, &node->data->pivot_data->angleX);
   return RES_OK;
 }
 
@@ -326,9 +357,34 @@ pivot_solve_single_axis
     break;
   default: FATAL("Unreachable code.\n"); break;
   }
-  ASSERT(node->data->pivot_data->pivot_angles[1] == 0
-    && node->data->pivot_data->pivot_angles[2] == 0);
+  ASSERT(node->data->pivot_data->angleZ == 0);
   return res;
+}
+
+static void
+compute_two_axis_angles
+  (const double rotated_n[3],
+   double* angleX,
+   double* angleZ)
+{
+  double _cosX, sinZ, cosZ;
+  /* ref normal is <0,1,0> */
+  ASSERT(rotated_n && angleX && angleZ);
+  ASSERT(d3_is_normalized(rotated_n));
+  if (fabs(rotated_n[2]) >= 0.9999) {
+    *angleX = 0.5 * sign(rotated_n[2]) * PI;
+    *angleZ = 0;
+    return;
+  }
+  *angleX = -asin(rotated_n[2]);
+  _cosX = 1 / cos(*angleX);
+  sinZ = rotated_n[0] * _cosX;
+  cosZ = rotated_n[1] * _cosX;
+  if (fabs(cosZ) >= 0.9999) {
+    *angleZ = cosZ > 0 ? 0 : PI;
+    return;
+  }
+  *angleZ = sinZ > 0 ? acos(cosZ) : 2 * PI - acos(cosZ);
 }
 
 FINLINE res_T
@@ -336,11 +392,25 @@ pivot_solve_two_axis_sun
   (struct sanim_node* node,
    const double in_dir[3])
 {
+  double mat[12], inv[12];
+  double local_in[3], rotated_n[3];
   ASSERT(node && in_dir);
   ASSERT(node->data->pivot_data);
   ASSERT(node->data->pivot_data->pivot.type == PIVOT_TWO_AXIS);
   ASSERT(node->data->pivot_data->tracking.policy == TRACKING_SUN);
+  ASSERT(d3_is_normalized(in_dir));
 
+  /* get in_dir in local space */
+  node_get_transform(node, 0, mat);
+  d33_transpose(inv, mat); /* no scale factors: inverse is transpose */
+  d33_muld3(local_in, inv, in_dir);
+  ASSERT(d3_is_normalized(local_in));
+
+  /* rotated_n = -local_in */
+  d3_muld(rotated_n, local_in, -1);
+
+  compute_two_axis_angles(
+    rotated_n, &node->data->pivot_data->angleX, &node->data->pivot_data->angleZ);
   return RES_OK;
 }
 
@@ -362,11 +432,30 @@ pivot_solve_two_axis_dir
   (struct sanim_node* node,
    const double in_dir[3])
 {
+  double mat[12], inv[12];
+  double local_in[3], rotated_n[3], local_out[3];
   ASSERT(node && in_dir);
   ASSERT(node->data->pivot_data);
   ASSERT(node->data->pivot_data->pivot.type == PIVOT_TWO_AXIS);
   ASSERT(node->data->pivot_data->tracking.policy == TRACKING_OUT_DIR);
+  ASSERT(d3_is_normalized(in_dir));
+  ASSERT(d3_is_normalized(node->data->pivot_data->tracking.data.out_dir.u));
 
+  /* get in_dir and out_dir in local space */
+  node_get_transform(node, 0, mat);
+  d33_transpose(inv, mat); /* no scale factors: inverse is transpose */
+  d33_muld3(local_in, inv, in_dir);
+  d33_muld3(local_out, inv, node->data->pivot_data->tracking.data.out_dir.u);
+  
+  /* rotated_n = bisectrix of local_in and out_dir */
+  d3_sub(rotated_n, local_out, local_in);
+  if (d3_normalize(rotated_n, rotated_n) < 1e-4) {
+    /* tangent rays */
+    return RES_BAD_ARG;
+  }
+
+  compute_two_axis_angles(
+    rotated_n, &node->data->pivot_data->angleX, &node->data->pivot_data->angleZ);
   return RES_OK;
 }
 
@@ -375,19 +464,24 @@ pivot_solve_two_axis
   (struct sanim_node* node,
    const double in_dir[3])
 {
+  res_T res = RES_OK;
   ASSERT(node && in_dir);
   ASSERT(node->data->pivot_data);
   ASSERT(node->data->pivot_data->pivot.type == PIVOT_TWO_AXIS);
 
   switch (node->data->pivot_data->tracking.policy) {
   case TRACKING_SUN:
-    return pivot_solve_two_axis_sun(node, in_dir);
+    res = pivot_solve_two_axis_sun(node, in_dir);
+    break;
   case TRACKING_POINT:
-    return pivot_solve_two_axis_point(node, in_dir);
+    res = pivot_solve_two_axis_point(node, in_dir);
+    break;
   case TRACKING_OUT_DIR:
-    return pivot_solve_two_axis_dir(node, in_dir);
+    res = pivot_solve_two_axis_dir(node, in_dir);
+    break;
   default: FATAL("Unreachable code.\n"); break;
   }
+  return res;
 }
 
 FINLINE res_T
@@ -408,7 +502,7 @@ copy_and_normalise_pivot_data
     break;
   case PIVOT_TWO_AXIS:
     d3_set(dest->pivot.data.pivot2.ref_point, pivot->data.pivot2.ref_point);
-    d3_set(dest->pivot.data.pivot2.spacing, pivot->data.pivot2.spacing);
+    dest->pivot.data.pivot2.spacing = pivot->data.pivot2.spacing;
     break;
   default: FATAL("Unreachable code.\n"); break;
   }

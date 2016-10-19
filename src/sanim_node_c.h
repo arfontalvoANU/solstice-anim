@@ -29,7 +29,7 @@ struct mem_allocator;
 
 /* supplemental data for nodes that are pivots */
 struct pivot_data {
-  double pivot_angles[3];
+  double angleX, angleZ;
   struct sanim_pivot pivot;
   struct sanim_tracking tracking;
 };
