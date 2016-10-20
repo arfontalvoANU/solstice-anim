@@ -220,6 +220,7 @@ pivot_solve_single_axis_line
   double local_in[3], rotated_n[3], local_out[3], local_target[3], ref_point[3];
   const double* ref_normal;
   double angle, previous_angle, delta;
+  double c1, c2;
   int cpt = 0;
   ASSERT(node && in_dir);
   ASSERT(node->data->pivot_data);
@@ -243,6 +244,24 @@ pivot_solve_single_axis_line
   else {
     d3_sub(local_target, node->data->pivot_data->tracking.data.point.target, mat + 9);
     d33_muld3(local_target, inv, local_target);
+  }
+
+  /* check if in, target_point and ref_point are compatible */
+  c1 = local_target[1] * local_target[1] + local_target[2] * local_target[2];
+  c2 = ref_point[1] * ref_point[1] + ref_point[2] * ref_point[2];
+  if (c1 <= c2) {
+    /* target in the pivot*/
+    return RES_BAD_ARG;
+  }
+  else {
+    double a, b, c;
+    a = local_in[1] * local_in[1] + local_in[2] * local_in[2];
+    b = -2 * (local_in[1] * local_target[1] + local_in[2] * local_target[2]);
+    c = c1 - c2;
+    if (b * b - 4 * a * c >= 0) {
+      /* no possible reflexion to the target */
+      return RES_BAD_ARG;
+    }
   }
 
   angle = 0;
@@ -300,8 +319,15 @@ pivot_solve_single_axis_dir
   ASSERT(d3_is_normalized(in_dir));
   ASSERT(d3_is_normalized(node->data->pivot_data->tracking.data.out_dir.u));
 
+
   ref_normal = node->data->pivot_data->pivot.data.pivot1.ref_normal;
   ASSERT(d3_is_normalized(ref_normal));
+
+  /* check if in and out directions are compatible */
+  if (d3_dot(in_dir, ref_normal) >= 0) {
+    /* no possible reflexion to the target */
+    return RES_BAD_ARG;
+  }
 
   /* get in_dir and out_dir in local space */
   node_get_transform(node, 0, mat);
