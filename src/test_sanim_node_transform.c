@@ -131,6 +131,7 @@ main(int argc, char** argv)
   CHECK(d33_eq_eps(transform, transform_, 1e-10), 1);
   CHECK(d3_eq_eps(transform + 9, transform_ + 9, 1e-10), 1);
 
+  /* release memory */
   CHECK(my_type_release(&t1), RES_OK);
   CHECK(my_type_release(&t2), RES_OK);
   CHECK(my_type_release(&t3), RES_OK);
