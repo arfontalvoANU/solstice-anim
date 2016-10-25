@@ -366,7 +366,7 @@ pivot_solve_single_axis_line
     }
     
     delta = previous_angle - angle;
-    if (fabs(delta) < 1e-10 || ++cpt > 100)
+    if (fabs(delta) < 1e-7 || ++cpt > 10)
       break;
 
     if (d2) {
@@ -585,7 +585,7 @@ pivot_solve_two_axis_point
       previous_angleZ += (angleZ > 0) ? 2 * PI : -2 * PI;
     }
     delta = MMAX(fabs(previous_angleX - angleX), fabs(previous_angleZ - angleZ));
-    if (delta < 1e-10 || ++cpt > 100)
+    if (delta < 1e-7 || ++cpt > 10)
       break;
 
     if (d2) {

@@ -68,8 +68,8 @@ main(int argc, char** argv)
   CHECK(my_type_set_translation(&t2, transl), RES_OK);
 
   CHECK(my_type_get_transform(&t2, transform), RES_OK);
-  CHECK(d33_is_identity_eps(transform, 1e-10), 1);
-  CHECK(d3_is_zero_eps(transform + 9, 1e-10), 1);
+  CHECK(d33_is_identity_eps(transform, 1e-7), 1);
+  CHECK(d3_is_zero_eps(transform + 9, 1e-7), 1);
 
   /* check translation & 1 rotation in a single node VS in 2 chained nodes */
   d3(rot, 0.17, 0, 0);
@@ -88,8 +88,8 @@ main(int argc, char** argv)
   CHECK(my_type_set_translation(&t2, transl), RES_OK);
   CHECK(my_type_set_rotations(&t2, rot), RES_OK);
   CHECK(my_type_get_transform(&t2, transform_), RES_OK);
-  CHECK(d33_eq_eps(transform, transform_, 1e-10), 1);
-  CHECK(d3_eq_eps(transform + 9, transform_ + 9, 1e-10), 1);
+  CHECK(d33_eq_eps(transform, transform_, 1e-7), 1);
+  CHECK(d3_eq_eps(transform + 9, transform_ + 9, 1e-7), 1);
 
   /* check translation & 2 rotations in a single node VS in 2 chained nodes */
   d3(rot, 0.17, -0.52, 0);
@@ -108,8 +108,8 @@ main(int argc, char** argv)
   CHECK(my_type_set_translation(&t3, transl), RES_OK);
   CHECK(my_type_set_rotations(&t3, rot), RES_OK);
   CHECK(my_type_get_transform(&t3, transform_), RES_OK);
-  CHECK(d33_eq_eps(transform, transform_, 1e-10), 1);
-  CHECK(d3_eq_eps(transform + 9, transform_ + 9, 1e-10), 1);
+  CHECK(d33_eq_eps(transform, transform_, 1e-7), 1);
+  CHECK(d3_eq_eps(transform + 9, transform_ + 9, 1e-7), 1);
 
   /* check 1 node with 3 rotations VS 3 chained nodes with 1 rotation each */
   d3(rot, 0.17, -0.52, 0.31);
@@ -128,8 +128,8 @@ main(int argc, char** argv)
   CHECK(my_type_set_translation(&t3, transl), RES_OK);
   CHECK(my_type_set_rotations(&t3, rot), RES_OK);
   CHECK(my_type_get_transform(&t3, transform_), RES_OK);
-  CHECK(d33_eq_eps(transform, transform_, 1e-10), 1);
-  CHECK(d3_eq_eps(transform + 9, transform_ + 9, 1e-10), 1);
+  CHECK(d33_eq_eps(transform, transform_, 1e-7), 1);
+  CHECK(d3_eq_eps(transform + 9, transform_ + 9, 1e-7), 1);
 
   /* release memory */
   CHECK(my_type_release(&t1), RES_OK);

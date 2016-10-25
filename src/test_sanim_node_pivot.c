@@ -78,8 +78,8 @@ main(int argc, char** argv)
   CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
   CHECK(my_type_get_transform(&t3, transform), RES_OK);
   d33_muld3(n, transform, pivot.data.pivot1.ref_normal);
-  CHECK(d3_eq_eps(n, d3(tmp, -sqrt(2) / 2, 0, +sqrt(2) / 2), 1e-10), 1);
-  CHECK(d3_eq_eps(transform + 9, d3(tmp, -sqrt(2), 3, 2), 1e-10), 1);
+  CHECK(d3_eq_eps(n, d3(tmp, -sqrt(2) / 2, 0, +sqrt(2) / 2), 1e-7), 1);
+  CHECK(d3_eq_eps(transform + 9, d3(tmp, -sqrt(2), 3, 2), 1e-7), 1);
 
   CHECK(my_type_release(&t1), RES_OK);
   CHECK(my_type_release(&t2), RES_OK);
@@ -133,8 +133,8 @@ main(int argc, char** argv)
   CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
   CHECK(my_type_get_transform(&t3, transform), RES_OK);
   d33_muld3(n, transform, pivot.data.pivot1.ref_normal);
-  CHECK(d3_eq_eps(pivot.data.pivot1.ref_normal, n, 1e-10), 1);
-  CHECK(d3_eq_eps(transform + 9, d3(n, -1, 3, 3), 1e-10), 1);
+  CHECK(d3_eq_eps(pivot.data.pivot1.ref_normal, n, 1e-7), 1);
+  CHECK(d3_eq_eps(transform + 9, d3(n, -1, 3, 3), 1e-7), 1);
 
   CHECK(my_type_release(&t1), RES_OK);
   CHECK(my_type_release(&t2), RES_OK);
@@ -165,7 +165,7 @@ main(int argc, char** argv)
   CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
   CHECK(my_type_get_transform(&t3, transform), RES_OK);
   d33_muld3(n, transform, pivot.data.pivot1.ref_normal);
-  CHECK(d3_eq_eps(n, d3(tmp, -sqrt(2) / 2, 0, +sqrt(2) / 2), 1e-10), 1);
+  CHECK(d3_eq_eps(n, d3(tmp, -sqrt(2) / 2, 0, +sqrt(2) / 2), 1e-7), 1);
 
   CHECK(my_type_release(&t1), RES_OK);
   CHECK(my_type_release(&t2), RES_OK);
@@ -194,7 +194,7 @@ main(int argc, char** argv)
   CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
   CHECK(my_type_get_transform(&t3, transform), RES_OK);
   d33_muld3(n, transform, pivot.data.pivot1.ref_normal);
-  CHECK(d3_eq_eps(n, d3(tmp, -sqrt(2) / 2, 0, +sqrt(2) / 2), 1e-10), 1);
+  CHECK(d3_eq_eps(n, d3(tmp, -sqrt(2) / 2, 0, +sqrt(2) / 2), 1e-7), 1);
 
   CHECK(my_type_release(&t1), RES_OK);
   CHECK(my_type_release(&t2), RES_OK);
@@ -225,7 +225,7 @@ main(int argc, char** argv)
   CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
   CHECK(my_type_get_transform(&t3, transform), RES_OK);
   d33_muld3(n, transform, pivot.data.pivot1.ref_normal);
-  CHECK(d3_eq_eps(n, d3(tmp, -sqrt(2) / 2, 0, +sqrt(2) / 2), 1e-10), 1);
+  CHECK(d3_eq_eps(n, d3(tmp, -sqrt(2) / 2, 0, +sqrt(2) / 2), 1e-7), 1);
 
   CHECK(my_type_release(&t1), RES_OK);
   CHECK(my_type_release(&t2), RES_OK);
@@ -254,8 +254,8 @@ main(int argc, char** argv)
   CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
   CHECK(my_type_get_transform(&t3, transform), RES_OK);
   d33_muld3(n, transform, pivot.data.pivot1.ref_normal);
-  CHECK(d3_eq_eps(n, d3(tmp, -1, 0, 0), 1e-10), 1);
-  CHECK(d3_eq_eps(transform + 9, d3(tmp, -1, 3, 1), 1e-10), 1);
+  CHECK(d3_eq_eps(n, d3(tmp, -1, 0, 0), 1e-7), 1);
+  CHECK(d3_eq_eps(transform + 9, d3(tmp, -1, 3, 1), 1e-7), 1);
 
   CHECK(my_type_release(&t1), RES_OK);
   CHECK(my_type_release(&t2), RES_OK);
@@ -291,15 +291,15 @@ main(int argc, char** argv)
   CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
   CHECK(my_type_get_transform(&t3, transform), RES_OK);
   d33_muld3(n, transform, y_ref_normal);
-  CHECK(d3_eq_eps(n, d3(tmp, -sqrt(2) / 2, 0, +sqrt(2) / 2), 1e-10), 1);
-  CHECK(d3_eq_eps(transform + 9, d3(tmp, -1, 3, 2 + sqrt(2)), 1e-10), 1);
+  CHECK(d3_eq_eps(n, d3(tmp, -sqrt(2) / 2, 0, +sqrt(2) / 2), 1e-7), 1);
+  CHECK(d3_eq_eps(transform + 9, d3(tmp, -1, 3, 2 + sqrt(2)), 1e-7), 1);
 
   d3(in_dir, 0, 1, 0);
   CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
   CHECK(my_type_get_transform(&t3, transform), RES_OK);
   d33_muld3(n, transform, y_ref_normal);
-  CHECK(d3_eq_eps(n, d3(tmp, 0, -1, 0), 1e-10), 1);
-  CHECK(d3_eq_eps(transform + 9, d3(tmp, -1, 0, 3), 1e-10), 1);
+  CHECK(d3_eq_eps(n, d3(tmp, 0, -1, 0), 1e-7), 1);
+  CHECK(d3_eq_eps(transform + 9, d3(tmp, -1, 0, 3), 1e-7), 1);
 
   CHECK(my_type_release(&t1), RES_OK);
   CHECK(my_type_release(&t2), RES_OK);
@@ -329,15 +329,15 @@ main(int argc, char** argv)
   CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
   CHECK(my_type_get_transform(&t3, transform), RES_OK);
   d33_muld3(n, transform, y_ref_normal);
-  CHECK(d3_eq_eps(n, d3(tmp, -sqrt(2) / 2, 0, +sqrt(2) / 2), 1e-10), 1);
-  CHECK(d3_eq_eps(transform + 9, d3(tmp, -1, 3, 2 + sqrt(2)), 1e-10), 1);
+  CHECK(d3_eq_eps(n, d3(tmp, -sqrt(2) / 2, 0, +sqrt(2) / 2), 1e-7), 1);
+  CHECK(d3_eq_eps(transform + 9, d3(tmp, -1, 3, 2 + sqrt(2)), 1e-7), 1);
 
   d3(in_dir, 0, 1, 0);
   CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
   CHECK(my_type_get_transform(&t3, transform), RES_OK);
   d33_muld3(n, transform, y_ref_normal);
-  CHECK(d3_eq_eps(n, d3(tmp, 0, -1, 0), 1e-10), 1);
-  CHECK(d3_eq_eps(transform + 9, d3(tmp, -1, 0, 3), 1e-10), 1);
+  CHECK(d3_eq_eps(n, d3(tmp, 0, -1, 0), 1e-7), 1);
+  CHECK(d3_eq_eps(transform + 9, d3(tmp, -1, 0, 3), 1e-7), 1);
 
   CHECK(my_type_release(&t1), RES_OK);
   CHECK(my_type_release(&t2), RES_OK);
@@ -366,15 +366,15 @@ main(int argc, char** argv)
   CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
   CHECK(my_type_get_transform(&t3, transform), RES_OK);
   d33_muld3(n, transform, y_ref_normal);
-  CHECK(d3_eq_eps(n, d3(tmp, 0, sqrt(2) / 2, sqrt(2) / 2), 1e-10), 1);
-  CHECK(d3_eq_eps(transform + 9, d3(tmp, 1, 3, 2 + sqrt(2)), 1e-10), 1);
+  CHECK(d3_eq_eps(n, d3(tmp, 0, sqrt(2) / 2, sqrt(2) / 2), 1e-7), 1);
+  CHECK(d3_eq_eps(transform + 9, d3(tmp, 1, 3, 2 + sqrt(2)), 1e-7), 1);
 
   d3(in_dir, -1, 0, 0);
   CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
   CHECK(my_type_get_transform(&t3, transform), RES_OK);
   d33_muld3(n, transform, y_ref_normal);
-  CHECK(d3_eq_eps(n, d3(tmp, sqrt(2) / 2, sqrt(2) / 2, 0), 1e-10), 1);
-  CHECK(d3_eq_eps(transform + 9, d3(tmp, 3 * sqrt(2) / 2, 2 + sqrt(2) / 2, 3), 1e-10), 1);
+  CHECK(d3_eq_eps(n, d3(tmp, sqrt(2) / 2, sqrt(2) / 2, 0), 1e-7), 1);
+  CHECK(d3_eq_eps(transform + 9, d3(tmp, 3 * sqrt(2) / 2, 2 + sqrt(2) / 2, 3), 1e-7), 1);
 
   CHECK(my_type_release(&t1), RES_OK);
   CHECK(my_type_release(&t2), RES_OK);
@@ -405,8 +405,8 @@ main(int argc, char** argv)
   CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
   CHECK(my_type_get_transform(&t3, transform), RES_OK);
   d33_muld3(n, transform, y_ref_normal);
-  CHECK(d3_eq_eps(n, d3(tmp, sqrt(2) / 2, sqrt(2) / 2, 0), 1e-10), 1);
-  CHECK(d3_eq_eps(transform + 9, d3(tmp, sqrt(2), 2, 3), 1e-10), 1);
+  CHECK(d3_eq_eps(n, d3(tmp, sqrt(2) / 2, sqrt(2) / 2, 0), 1e-7), 1);
+  CHECK(d3_eq_eps(transform + 9, d3(tmp, sqrt(2), 2, 3), 1e-7), 1);
 
   CHECK(my_type_release(&t1), RES_OK);
   CHECK(my_type_release(&t2), RES_OK);
@@ -435,8 +435,8 @@ main(int argc, char** argv)
   CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
   CHECK(my_type_get_transform(&t3, transform), RES_OK);
   d33_muld3(n, transform, y_ref_normal);
-  CHECK(d3_eq_eps(n, d3(tmp, sqrt(2) / 2, sqrt(2) / 2, 0), 1e-10), 1);
-  CHECK(d3_eq_eps(transform + 9, d3(tmp, 1 + sqrt(2), 3, 3), 1e-10), 1);
+  CHECK(d3_eq_eps(n, d3(tmp, sqrt(2) / 2, sqrt(2) / 2, 0), 1e-7), 1);
+  CHECK(d3_eq_eps(transform + 9, d3(tmp, 1 + sqrt(2), 3, 3), 1e-7), 1);
 
   CHECK(my_type_release(&t1), RES_OK);
   CHECK(my_type_release(&t2), RES_OK);
@@ -465,8 +465,8 @@ main(int argc, char** argv)
   CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
   CHECK(my_type_get_transform(&t3, transform), RES_OK);
   d33_muld3(n, transform, y_ref_normal);
-  CHECK(d3_eq_eps(n, d3(tmp, -sqrt(2) / 2, 0, +sqrt(2) / 2), 1e-10), 1);
-  CHECK(d3_eq_eps(transform + 9, d3(tmp, -1, 3, 2 + sqrt(2)), 1e-10), 1);
+  CHECK(d3_eq_eps(n, d3(tmp, -sqrt(2) / 2, 0, +sqrt(2) / 2), 1e-7), 1);
+  CHECK(d3_eq_eps(transform + 9, d3(tmp, -1, 3, 2 + sqrt(2)), 1e-7), 1);
 
   CHECK(my_type_release(&t1), RES_OK);
   CHECK(my_type_release(&t2), RES_OK);
@@ -495,8 +495,8 @@ main(int argc, char** argv)
   CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
   CHECK(my_type_get_transform(&t3, transform), RES_OK);
   d33_muld3(n, transform, y_ref_normal);
-  CHECK(d3_eq_eps(n, d3(tmp, 0, sqrt(2) / 2, sqrt(2) / 2), 1e-10), 1);
-  CHECK(d3_eq_eps(transform + 9, d3(tmp, 1, 3, 2 + sqrt(2)), 1e-10), 1);
+  CHECK(d3_eq_eps(n, d3(tmp, 0, sqrt(2) / 2, sqrt(2) / 2), 1e-7), 1);
+  CHECK(d3_eq_eps(transform + 9, d3(tmp, 1, 3, 2 + sqrt(2)), 1e-7), 1);
 
   CHECK(my_type_release(&t1), RES_OK);
   CHECK(my_type_release(&t2), RES_OK);
@@ -525,8 +525,8 @@ main(int argc, char** argv)
   CHECK(sanim_node_solve_pivot(&t2.node, in_dir), RES_OK);
   CHECK(my_type_get_transform(&t3, transform), RES_OK);
   d33_muld3(n, transform, y_ref_normal);
-  CHECK(d3_eq_eps(n, d3(tmp, 0, sqrt(2) / 2, sqrt(2) / 2), 1e-10), 1);
-  CHECK(d3_eq_eps(transform + 9, d3(tmp, 1, 3, 2 + sqrt(2)), 1e-10), 1);
+  CHECK(d3_eq_eps(n, d3(tmp, 0, sqrt(2) / 2, sqrt(2) / 2), 1e-7), 1);
+  CHECK(d3_eq_eps(transform + 9, d3(tmp, 1, 3, 2 + sqrt(2)), 1e-7), 1);
 
   /* release memory */
   CHECK(my_type_release(&t1), RES_OK);
