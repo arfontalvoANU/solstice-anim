@@ -297,6 +297,8 @@ pivot_solve_single_axis_line
   double* const local_target_2D = local_target + 1;
   struct pivot_data* pivot_data;
   double angle, previous_angle, delta;
+  double sign_dA, prev_sign_dA;
+  double kA;
   double d1, d2;
   int cpt = 0;
   ASSERT(node && node->data && in_dir);
@@ -339,6 +341,8 @@ pivot_solve_single_axis_line
   }
 
   angle = 0;
+  prev_sign_dA = 0;
+  kA = 0.9;
   do {
     double pivot[4];
     /* compute 2D normal after rotation */
@@ -357,13 +361,28 @@ pivot_solve_single_axis_line
 
     previous_angle = angle;
     compute_single_axis_angle(ref_normal_2D, rotated_n_2D, &angle);
+    if (fabs(previous_angle - angle) > PI) {
+      previous_angle = (angle > 0) ? 2 * PI : -2 * PI;
+    }
     
     delta = previous_angle - angle;
     if (fabs(delta) < 1e-10 || ++cpt > 100)
       break;
 
-    d22_rotation(pivot, angle);
+    if (d2) {
+      /* only if ref_point is not the rotation point
+      * the heuristic is to amortize algorithm's oscillations */
+      sign_dA = sign(previous_angle - angle);
+      if (prev_sign_dA != sign_dA)
+        kA *= 0.9;
+      else
+        kA *= 1 / 0.9;
+      angle = previous_angle + kA * (angle - previous_angle);
+      prev_sign_dA = sign_dA;
+    }
+
     /* update ref_point */
+    d22_rotation(pivot, angle);
     d22_muld2(ref_point_2D, pivot, pivot_data->pivot.data.pivot1.ref_point + 1);
     /* no d3_add(ref_point, ref_point, pivot + 9) as pivot has no offset to add */
   } while (1);
@@ -502,6 +521,9 @@ pivot_solve_two_axis_point
   double mat[12], inv[9];
   double local_in[3], rotated_n[3], local_out[3], local_target[3], ref_point[3];
   double angleX, angleZ, previous_angleX, previous_angleZ, delta;
+  double sign_dX, sign_dZ, prev_sign_dX, prev_sign_dZ;
+  double kX, kZ;
+  double d1, d2;
   struct pivot_data* pivot_data;
   int cpt = 0;
   ASSERT(node && node->data && in_dir);
@@ -530,12 +552,16 @@ pivot_solve_two_axis_point
   }
 
   /* check if in, target_point and ref_point are compatible */
-  if (d3_dot(local_target, local_target) <= d3_dot(ref_point, ref_point)) {
+  d1 = d3_dot(local_target, local_target);
+  d2 = d3_dot(ref_point, ref_point);
+  if (d1 <= d2) {
     /* target in the pivot */
     return RES_BAD_ARG;
   }
 
   angleX = angleZ = 0;
+  prev_sign_dX = prev_sign_dZ = 0;
+  kX = kZ = 0.9;
   do {
     double pivot[12];
     /* compute rotated_n */
@@ -552,10 +578,34 @@ pivot_solve_two_axis_point
     previous_angleX = angleX;
     previous_angleZ = angleZ;
     compute_two_axis_angles(rotated_n, &angleX, &angleZ);
-
+    if (fabs(previous_angleX - angleX) > PI) {
+      previous_angleX = (angleX > 0) ? 2 * PI : -2 * PI;
+    }
+    if (fabs(previous_angleZ - angleZ) > PI) {
+      previous_angleZ += (angleZ > 0) ? 2 * PI : -2 * PI;
+    }
     delta = MMAX(fabs(previous_angleX - angleX), fabs(previous_angleZ - angleZ));
     if (delta < 1e-10 || ++cpt > 100)
       break;
+
+    if (d2) {
+      /* only if ref_point is not the rotation point
+       * the heuristic is to amortize algorithm's oscillations */
+      sign_dX = sign(previous_angleX - angleX);
+      sign_dZ = sign(previous_angleZ - angleZ);
+      if (prev_sign_dX != sign_dX)
+        kX *= 0.9;
+      else
+        kX *= 1 / 0.9;
+      angleX = previous_angleX + kX * (angleX - previous_angleX);
+      if (prev_sign_dZ != sign_dZ)
+        kZ *= 0.9;
+      else
+        kZ *= 1 / 0.9;
+      angleZ = previous_angleZ + kZ * (angleZ - previous_angleZ);
+      prev_sign_dX = sign_dX;
+      prev_sign_dZ = sign_dZ;
+    }
 
     get_ZXpivot_transform(
       angleZ, angleX, pivot_data->pivot.data.pivot2.spacing, pivot);
