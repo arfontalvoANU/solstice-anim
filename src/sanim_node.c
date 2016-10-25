@@ -20,7 +20,7 @@
 #include <rsys/mem_allocator.h>
 #include <rsys/ref_count.h>
 #include <rsys/double33.h>
-#include <rsys/double2.h>
+#include <rsys/double22.h>
 
 #include <math.h>
 
@@ -62,6 +62,17 @@ d34_set_identity(double dst[12]) {
   ASSERT(dst);
   d33_set_identity(dst);
   d3_splat(dst + 9, 0);
+}
+
+static INLINE double*
+d22_rotation(double dst[4], const double angle/* in radian */)
+{
+  const double c = (double) cos((double) angle);
+  const double s = (double) sin((double) angle);
+  ASSERT(dst);
+  dst[0] = c; dst[1] = s;
+  dst[2] = -s; dst[3] = c;
+  return dst;
 }
 
 static double*
@@ -280,9 +291,10 @@ pivot_solve_single_axis_line
    const double in_dir[3])
 {
   double mat[12], inv[9];
-  double local_in[3], local_target[3], ref_point[3];
-  double rotated_n_2D[2], local_out_2D[2], local_in_2D[2];
+  double local_in[3], local_target[3];
+  double rotated_n_2D[2], local_out_2D[2], local_in_2D[2], ref_point_2D[2];
   const double* ref_normal_2D;
+  double* const local_target_2D = local_target + 1;
   struct pivot_data* pivot_data;
   double angle, previous_angle, delta;
   double d1, d2;
@@ -297,7 +309,7 @@ pivot_solve_single_axis_line
   ref_normal_2D = pivot_data->pivot.data.pivot1.ref_normal + 1;
   ASSERT(pivot_data->pivot.data.pivot1.ref_normal[0] == 0); /* solve in YZ plane */
   ASSERT(d2_is_normalized(ref_normal_2D));
-  d3_set(ref_point, pivot_data->pivot.data.pivot1.ref_point);
+  d2_set(ref_point_2D, pivot_data->pivot.data.pivot1.ref_point + 1);
 
   /* get in_dir in local space */
   node_get_transform(node, 0, mat);
@@ -319,8 +331,8 @@ pivot_solve_single_axis_line
   }
 
   /* check if in, target_point and ref_point are compatible */
-  d1 = d2_dot(local_target + 1, local_target + 1); /* in the YZ plane */
-  d2 = d2_dot(ref_point + 1, ref_point + 1);
+  d1 = d2_dot(local_target_2D, local_target_2D); /* in the YZ plane */
+  d2 = d2_dot(ref_point_2D, ref_point_2D);
   if (d1 <= d2) {
     /* target in the pivot */
     return RES_BAD_ARG;
@@ -328,9 +340,9 @@ pivot_solve_single_axis_line
 
   angle = 0;
   do {
-    double pivot[12];
+    double pivot[4];
     /* compute 2D normal after rotation */
-    d2_sub(local_out_2D, local_target + 1, ref_point + 1);
+    d2_sub(local_out_2D, local_target_2D, ref_point_2D);
     if (d2_normalize(local_out_2D, local_out_2D) < 0.25) {
       /* not really in the YZ-plane */
       return RES_BAD_ARG;
@@ -347,12 +359,12 @@ pivot_solve_single_axis_line
     compute_single_axis_angle(ref_normal_2D, rotated_n_2D, &angle);
     
     delta = previous_angle - angle;
-    if (fabs(delta) < 1e-10 || ++cpt == 100)
+    if (fabs(delta) < 1e-10 || ++cpt > 100)
       break;
 
-    get_Xpivot_transform(angle, 0, pivot);
+    d22_rotation(pivot, angle);
     /* update ref_point */
-    d33_muld3(ref_point, pivot, pivot_data->pivot.data.pivot1.ref_point);
+    d22_muld2(ref_point_2D, pivot, pivot_data->pivot.data.pivot1.ref_point + 1);
     /* no d3_add(ref_point, ref_point, pivot + 9) as pivot has no offset to add */
   } while (1);
   
@@ -542,7 +554,7 @@ pivot_solve_two_axis_point
     compute_two_axis_angles(rotated_n, &angleX, &angleZ);
 
     delta = MMAX(fabs(previous_angleX - angleX), fabs(previous_angleZ - angleZ));
-    if (delta < 1e-10 || ++cpt == 100)
+    if (delta < 1e-10 || ++cpt > 100)
       break;
 
     get_ZXpivot_transform(
