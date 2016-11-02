@@ -30,6 +30,11 @@ main(int argc, char** argv)
   mem_init_proxy_allocator(&allocator, &mem_default_allocator);
   
   /* test a typical use in my_type */
+  CHECK(my_type_init(&allocator, &t1), RES_OK);
+  CHECK(my_type_init(&allocator, &t2), RES_OK);
+
+  CHECK(my_type_add_child(&t1, &t2), RES_OK);
+
   d3_splat(transl, +1);
   CHECK(my_type_set_translation(&t1, transl), RES_OK);
 
@@ -41,6 +46,8 @@ main(int argc, char** argv)
   CHECK(d3_is_zero(transform + 9), 1);
 
   d3(rot, PI, 0, 0);
+  CHECK(my_type_set_rotations(NULL, rot), RES_BAD_ARG);
+  CHECK(my_type_set_rotations(&t1, NULL), RES_BAD_ARG);
   CHECK(my_type_set_rotations(&t1, rot), RES_OK);
   CHECK(my_type_set_rotations(&t2, rot), RES_OK);
   d3(transl, 0, +1, 0);
