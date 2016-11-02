@@ -42,6 +42,12 @@ my_type_init_pivot
    struct my_type* t);
 
 res_T
+my_type_copy
+  (struct mem_allocator *allocator,
+   const struct my_type* src,
+   struct my_type* t);
+
+res_T
 my_type_release(struct my_type* t);
 
 res_T
@@ -56,6 +62,20 @@ my_type_set_rotations(struct my_type* t, const double rotations[3]);
 res_T
 my_type_get_transform(struct my_type* t, double transform[12]);
 
+res_T
+my_type_get_father
+  (const struct my_type* t,
+   const struct my_type** father);
+
+res_T
+my_type_get_children_count(const struct my_type* t, size_t* count);
+
+res_T
+my_type_get_child
+  (const struct my_type* t,
+   const size_t idx,
+   const struct my_type** child);
+
 /*******************************************************************************
 * Utilities
 ******************************************************************************/
@@ -67,6 +87,9 @@ d3_is_zero(const double v[3]);
 
 char
 d33_is_identity_eps(const double v[9], const double eps);
+
+char
+d34_eq_eps(const double a[12], const double b[12], const double eps);
 
 void
 log_stream(const char* msg, void* ctx);

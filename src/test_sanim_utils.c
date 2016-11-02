@@ -44,6 +44,56 @@ my_type_init_pivot
 }
 
 res_T
+my_type_copy
+  (struct mem_allocator *allocator,
+   const struct my_type* src,
+   struct my_type* t)
+{
+  if (!t||! src) return RES_BAD_ARG;
+  /* init my stuff */
+  t->my_data = src->my_data;
+  /* init node stuff */
+  return sanim_node_copy(allocator, &src->node, &t->node);
+}
+
+res_T
+my_type_get_father
+  (const struct my_type* t,
+   const struct my_type** father)
+{
+  struct sanim_node* tmp;
+  res_T res = RES_OK;
+  if (!t || !father) return RES_BAD_ARG;
+  res = sanim_node_get_father(&t->node, &tmp);
+  if (res != RES_OK) return res;
+  *father = CONTAINER_OF(tmp, struct my_type, node);
+  return RES_OK;
+}
+
+res_T
+my_type_get_children_count
+  (const struct my_type* t,
+   size_t* count)
+{
+  return sanim_node_get_children_count(&t->node, count);
+}
+
+res_T
+my_type_get_child
+  (const struct my_type* t,
+   const size_t idx,
+   const struct my_type** child)
+{
+  struct sanim_node* tmp;
+  res_T res = RES_OK;
+  if (!t || !child) return RES_BAD_ARG;
+  res = sanim_node_get_child(&t->node, idx, &tmp);
+  if (res != RES_OK) return res;
+  *child = CONTAINER_OF(tmp, struct my_type, node);
+  return RES_OK;
+}
+
+res_T
 my_type_release(struct my_type* t) {
   if (!t) return RES_BAD_ARG;
   /* release my stuff */
@@ -105,6 +155,16 @@ d33_is_identity_eps(const double v[9], const double eps) {
       if (fabs(v[i] - (x == y ? 1 : 0)) > eps) return 0;
       ++i;
     }
+  }
+  return 1;
+}
+
+char
+d34_eq_eps(const double a[12], const double b[12], const double eps) {
+  int i;
+  ASSERT(eps >= 0);
+  FOR_EACH(i, 0, 12) {
+      if (fabs(a[i] - b[i]) > eps) return 0;
   }
   return 1;
 }

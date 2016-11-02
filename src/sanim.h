@@ -156,7 +156,30 @@ sanim_node_set_rotations
 SANIM_API res_T
 sanim_node_get_transform
   (struct sanim_node* node,
-   double transform[12]);  /* 3x4 column major matrix */
+   double transform[12]); /* 3x4 column major matrix */
+
+SANIM_API res_T
+sanim_node_get_father
+  (const struct sanim_node* node,
+   const struct sanim_node** father);
+
+SANIM_API res_T
+sanim_node_get_children_count
+  (const struct sanim_node* node,
+   size_t* count);
+
+SANIM_API res_T
+sanim_node_get_child
+  (const struct sanim_node* node,
+   const size_t idx,
+   const struct sanim_node** child);
+
+/* simple copy, no recursion */
+SANIM_API res_T
+sanim_node_copy
+  (struct mem_allocator* allocator, /* May be NULL <=> use default allocator */
+   const struct sanim_node* src_node,
+   struct sanim_node* node);
 
 END_DECLS
 

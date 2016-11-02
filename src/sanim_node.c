@@ -14,7 +14,6 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 #include "sanim_node_c.h"
-#include "sanim_device_c.h"
 #include "sanim.h"
 
 #include <rsys/mem_allocator.h>
@@ -873,4 +872,77 @@ sanim_node_get_transform(struct sanim_node* node, double transform[12])
     return RES_BAD_ARG;
   node_get_transform(node, 1, transform);
   return RES_OK;
+}
+
+res_T
+sanim_node_get_father
+  (const struct sanim_node* node,
+   const struct sanim_node** father)
+{
+  if (!node || !father)
+    return RES_BAD_ARG;
+  *father = node->data->father;
+  return RES_OK;
+}
+
+res_T
+sanim_node_get_children_count
+  (const struct sanim_node* node,
+   size_t* count)
+{
+  if (!node || !count)
+    return RES_BAD_ARG;
+  *count = darray_children_size_get(&node->data->children);
+  return RES_OK;
+}
+
+res_T
+sanim_node_get_child
+  (const struct sanim_node* node,
+   const size_t idx,
+   const struct sanim_node** child)
+{
+  const struct sanim_node* const* children;
+  if (!node || !child)
+    return RES_BAD_ARG;
+  if (idx >= darray_children_size_get(&node->data->children))
+    return RES_BAD_ARG;
+  children = darray_children_cdata_get(&node->data->children);
+  *child = children[idx];
+  return RES_OK;
+}
+
+res_T
+sanim_node_copy
+  (struct mem_allocator* allocator, /* May be NULL <=> use default allocator */
+   const struct sanim_node* src_node,
+   struct sanim_node* node)
+{
+  res_T res = RES_OK;
+
+  if (!node || !src_node) return RES_BAD_ARG;
+  res = sanim_node_initialize(allocator, node);
+  if (res != RES_OK) goto error;
+
+  if (src_node->data->pivot_data) {
+    /* duplicate pivot data */
+    struct mem_allocator* alloc = allocator ? allocator : &mem_default_allocator;
+    node->data->pivot_data = MEM_CALLOC(alloc, 1, sizeof(struct pivot_data));
+    if (!node->data->pivot_data) {
+      res = RES_MEM_ERR;
+      goto error;
+    }
+    node->data->pivot_data->angleX = src_node->data->pivot_data->angleX;
+    node->data->pivot_data->angleZ = src_node->data->pivot_data->angleZ;
+    node->data->pivot_data->pivot = src_node->data->pivot_data->pivot;
+    node->data->pivot_data->tracking = src_node->data->pivot_data->tracking;
+  }
+  d3_set(node->data->rotations, src_node->data->rotations);
+  d3_set(node->data->translation, src_node->data->translation);
+
+exit:
+  return res;
+error:
+  sanim_node_release(node);
+  goto exit;
 }

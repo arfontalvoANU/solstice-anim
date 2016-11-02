@@ -96,6 +96,7 @@ if(NOT NO_TEST)
     rcmake_set_test_runtime_dirs(${_name} _runtime_dirs)
   endfunction()
   
+  new_test(test_sanim_node)
   new_test(test_sanim_node_transform)
   new_test(test_sanim_node_pivot)
 endif()
