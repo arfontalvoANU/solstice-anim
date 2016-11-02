@@ -46,9 +46,6 @@ struct logger;
 struct mem_allocator;
 struct node_data;
 
-/* Opaque Solstice Anim types */
-struct sanim_device;
-
 /* sanim_node type for building own node types */
 struct sanim_node {
   struct node_data* data;
@@ -116,26 +113,6 @@ struct sanim_tracking {
   } data;
 };
 BEGIN_DECLS
-
-/*******************************************************************************
- * Device API - Main entry point of the Solstice Anim library. Applications
- * use the sanim_device to create others Solstice Anim resources.
- ******************************************************************************/
-SANIM_API res_T
-sanim_device_create
-(struct logger* logger, /* May be NULL <=> use default logger */
-  struct mem_allocator* allocator, /* May be NULL <=> use default allocator */
-  const unsigned nthreads_hint, /* Hint on the number of threads to use */
-  const int verbose, /* Make the library more verbose */
-  struct sanim_device** dev);
-
-SANIM_API res_T
-sanim_device_ref_get
-  (struct sanim_device* dev);
-
-SANIM_API res_T
-sanim_device_ref_put
-  (struct sanim_device* dev);
 
 /*******************************************************************************
  * Node API.

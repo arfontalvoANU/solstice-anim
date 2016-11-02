@@ -45,7 +45,6 @@ set(VERSION_PATCH 0)
 set(VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 set(SANIM_FILES_SRC
-  sanim_device.c
   sanim_node.c)
 
 set(SANIM_FILES_INC_API
@@ -53,7 +52,6 @@ set(SANIM_FILES_INC_API
 
 set(SANIM_FILES_INC
   sanim_c.h
-  sanim_device_c.h
   sanim_node_c.h)
 
 set(SANIM_FILES_DOC COPYING README.md)
@@ -98,7 +96,6 @@ if(NOT NO_TEST)
     rcmake_set_test_runtime_dirs(${_name} _runtime_dirs)
   endfunction()
   
-  new_test(test_sanim_device)
   new_test(test_sanim_node_transform)
   new_test(test_sanim_node_pivot)
 endif()
