@@ -140,7 +140,7 @@ sanim_node_release
 
 SANIM_API res_T
 sanim_node_add_child
-  (struct sanim_node* node,
+  (struct sanim_node* father,
    struct sanim_node* child);
 
 SANIM_API res_T

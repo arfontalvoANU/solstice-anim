@@ -724,18 +724,18 @@ copy_and_normalise_pivot_data
 ******************************************************************************/
 res_T
 sanim_node_add_child
-  (struct sanim_node* node,
+  (struct sanim_node* father,
    struct sanim_node* child)
 {
   res_T res = RES_OK;
 
-  if (!node || !child) return RES_BAD_ARG;
+  if (!father || !child) return RES_BAD_ARG;
   if (child->data->father) return RES_BAD_ARG;
-  if (is_ancestor(node, child)) return RES_BAD_ARG;
-  if (child->data->pivot_data && is_after_pivot(node)) return RES_BAD_ARG;
+  if (is_ancestor(father, child)) return RES_BAD_ARG;
+  if (child->data->pivot_data && is_after_pivot(father)) return RES_BAD_ARG;
 
-  child->data->father = node;
-  res = darray_children_push_back(&node->data->children, &child);
+  child->data->father = father;
+  res = darray_children_push_back(&father->data->children, &child);
   if (res != RES_OK) {
     goto error;
   }
