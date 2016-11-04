@@ -129,6 +129,15 @@ sanim_node_initialize_pivot
    const struct sanim_tracking* tracking,
    struct sanim_node* node);
 
+/* simple copy, no recursion
+ * copy content of src into node that must be valid
+ * copy rotations, translation and possible pivot information */
+SANIM_API res_T
+sanim_node_copy_initialize
+  (struct mem_allocator* allocator, /* May be NULL <=> use default allocator */
+   const struct sanim_node* src,
+   struct sanim_node* node);
+
 SANIM_API res_T
 sanim_node_solve_pivot
   (struct sanim_node* node,
@@ -173,13 +182,6 @@ sanim_node_get_child
   (const struct sanim_node* node,
    const size_t idx,
    const struct sanim_node** child);
-
-/* simple copy, no recursion */
-SANIM_API res_T
-sanim_node_copy
-  (struct mem_allocator* allocator, /* May be NULL <=> use default allocator */
-   const struct sanim_node* src_node,
-   struct sanim_node* node);
 
 END_DECLS
 

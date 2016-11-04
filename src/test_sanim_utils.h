@@ -19,6 +19,7 @@
 #include "sanim.h"
 
 #include <rsys/rsys.h>
+#include <rsys/ref_count.h>
 
 struct mem_allocator;
 
@@ -28,27 +29,33 @@ struct mem_allocator;
 struct my_type {
   struct sanim_node node;
   double my_data;
-  /* may be some ref count mechanism */
+  struct mem_allocator *allocator;
+  ref_T ref;
 };
 
 res_T
-my_type_init(struct mem_allocator *allocator, struct my_type* t);
+my_type_create(struct mem_allocator *allocator, struct my_type** t);
 
 res_T
-my_type_init_pivot
+my_type_pivot_create
   (struct mem_allocator *allocator,
    const struct sanim_pivot* pivot,
    const struct sanim_tracking* tracking,
-   struct my_type* t);
+   struct my_type** t);
+
+/* create a new node and copy content of src into it 
+ * non-recursive copy (father/child links are not set)
+ * copy my_data, rotations, translation and possible pivot information */
+res_T
+my_type_copy_create
+  (const struct my_type* src,
+   struct my_type** dst);
 
 res_T
-my_type_copy
-  (struct mem_allocator *allocator,
-   const struct my_type* src,
-   struct my_type* t);
+my_type_ref_get(struct my_type* t);
 
 res_T
-my_type_release(struct my_type* t);
+my_type_ref_put(struct my_type* t);
 
 res_T
 my_type_add_child(struct my_type* t, struct my_type* child);
@@ -63,6 +70,9 @@ res_T
 my_type_get_transform(struct my_type* t, double transform[12]);
 
 res_T
+my_type_solve_pivot(struct my_type* t, const double in_dir[3]);
+
+res_T
 my_type_get_father
   (const struct my_type* t,
    const struct my_type** father);
@@ -75,6 +85,12 @@ my_type_get_child
   (const struct my_type* t,
    const size_t idx,
    const struct my_type** child);
+
+res_T
+my_type_recursive_copy
+  (struct mem_allocator *allocator,
+   const struct my_type* src,
+   struct my_type** dst);
 
 /*******************************************************************************
 * Utilities

@@ -719,7 +719,7 @@ copy_and_normalise_pivot_data
 }
 
 /*******************************************************************************
-* Exported ssol_spectrum functions
+* Exported sanim_node functions
 ******************************************************************************/
 res_T
 sanim_node_add_child
@@ -810,6 +810,40 @@ error:
 }
 
 res_T
+sanim_node_copy_initialize
+  (struct mem_allocator* allocator, /* May be NULL <=> use default allocator */
+   const struct sanim_node* src,
+   struct sanim_node* node)
+{
+  res_T res = RES_OK;
+
+  if (!node || !src) return RES_BAD_ARG;
+  res = sanim_node_initialize(allocator, node);
+  if (res != RES_OK) goto error;
+
+  if (src->data->pivot_data) {
+    node->data->pivot_data
+      = MEM_CALLOC(node->data->allocator, 1, sizeof(struct pivot_data));
+    if (!node->data->pivot_data) {
+      res = RES_MEM_ERR;
+      goto error;
+    }
+    node->data->pivot_data->angleX = src->data->pivot_data->angleX;
+    node->data->pivot_data->angleZ = src->data->pivot_data->angleZ;
+    node->data->pivot_data->pivot = src->data->pivot_data->pivot;
+    node->data->pivot_data->tracking = src->data->pivot_data->tracking;
+  }
+  d3_set(node->data->rotations, src->data->rotations);
+  d3_set(node->data->translation, src->data->translation);
+
+exit:
+  return res;
+error:
+  sanim_node_release(node);
+  goto exit;
+}
+
+res_T
 sanim_node_solve_pivot
   (struct sanim_node* node,
    const double in_dir[3])
@@ -841,6 +875,7 @@ sanim_node_release
       MEM_RM(node->data->allocator, node->data->pivot_data);
     }
     MEM_RM(node->data->allocator, node->data);
+    node->data = NULL;
   }
   return RES_OK;
 }
@@ -910,39 +945,4 @@ sanim_node_get_child
   children = darray_children_cdata_get(&node->data->children);
   *child = children[idx];
   return RES_OK;
-}
-
-res_T
-sanim_node_copy
-  (struct mem_allocator* allocator, /* May be NULL <=> use default allocator */
-   const struct sanim_node* src_node,
-   struct sanim_node* node)
-{
-  res_T res = RES_OK;
-
-  if (!node || !src_node) return RES_BAD_ARG;
-  res = sanim_node_initialize(allocator, node);
-  if (res != RES_OK) goto error;
-
-  if (src_node->data->pivot_data) {
-    /* duplicate pivot data */
-    struct mem_allocator* alloc = allocator ? allocator : &mem_default_allocator;
-    node->data->pivot_data = MEM_CALLOC(alloc, 1, sizeof(struct pivot_data));
-    if (!node->data->pivot_data) {
-      res = RES_MEM_ERR;
-      goto error;
-    }
-    node->data->pivot_data->angleX = src_node->data->pivot_data->angleX;
-    node->data->pivot_data->angleZ = src_node->data->pivot_data->angleZ;
-    node->data->pivot_data->pivot = src_node->data->pivot_data->pivot;
-    node->data->pivot_data->tracking = src_node->data->pivot_data->tracking;
-  }
-  d3_set(node->data->rotations, src_node->data->rotations);
-  d3_set(node->data->translation, src_node->data->translation);
-
-exit:
-  return res;
-error:
-  sanim_node_release(node);
-  goto exit;
 }
