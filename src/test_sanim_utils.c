@@ -187,7 +187,7 @@ my_type_recursive_copy_
     res = my_type_recursive_copy_(alloc, child, tmp, &node);
     if (res != RES_OK) goto error;
     my_type_add_child(root, node);
-    my_type_ref_put(node); /* node has is referenced by root */
+    my_type_ref_put(node); /* node is referenced by root */
   }
 exit:
   *dst = root;
@@ -213,9 +213,6 @@ my_type_recursive_copy
   darray_tmp_init(alloc, &tmp);
   res = my_type_recursive_copy_(alloc, src, &tmp, dst);
   if (res != RES_OK) goto error;
-  (*dst)->my_data = 0;
-  (*dst)->allocator = alloc;
-  ref_init(&(*dst)->ref);
 exit:
   darray_tmp_release(&tmp);
   return res;
