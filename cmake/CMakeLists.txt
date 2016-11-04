@@ -51,7 +51,6 @@ set(SANIM_FILES_INC_API
   sanim.h)
 
 set(SANIM_FILES_INC
-  sanim_c.h
   sanim_node_c.h)
 
 set(SANIM_FILES_DOC COPYING README.md)
