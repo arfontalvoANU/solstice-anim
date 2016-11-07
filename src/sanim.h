@@ -183,6 +183,11 @@ sanim_node_get_child
    const size_t idx,
    const struct sanim_node** child);
 
+SANIM_API res_T
+sanim_node_is_pivot
+  (const struct sanim_node* node,
+   int* pivot);
+
 END_DECLS
 
 #endif /* SANIM_H */

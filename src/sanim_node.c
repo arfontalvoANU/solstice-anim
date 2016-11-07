@@ -728,7 +728,9 @@ sanim_node_add_child
 {
   res_T res = RES_OK;
 
-  if (!father || !child) return RES_BAD_ARG;
+  if (!father || !child
+    || !father->data || !child->data
+    ) return RES_BAD_ARG;
   if (child->data->father) return RES_BAD_ARG;
   if (is_ancestor(father, child)) return RES_BAD_ARG;
   if (child->data->pivot_data && is_after_pivot(father)) return RES_BAD_ARG;
@@ -944,5 +946,15 @@ sanim_node_get_child
     return RES_BAD_ARG;
   children = darray_children_cdata_get(&node->data->children);
   *child = children[idx];
+  return RES_OK;
+}
+
+res_T
+sanim_node_is_pivot
+  (const struct sanim_node* node,
+   int* pivot)
+{
+  if (!node || !pivot) return RES_BAD_ARG;
+  *pivot = (node->data && node->data->pivot_data);
   return RES_OK;
 }

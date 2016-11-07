@@ -73,6 +73,9 @@ res_T
 my_type_solve_pivot(struct my_type* t, const double in_dir[3]);
 
 res_T
+my_type_is_pivot(struct my_type* t, int* pivot);
+
+res_T
 my_type_get_father
   (const struct my_type* t,
    const struct my_type** father);

@@ -26,6 +26,7 @@ main(int argc, char** argv)
   struct sanim_pivot pivot;
   struct sanim_tracking tracking;
   size_t count;
+  int p;
   double transform1[12], transform2[12];
   double transl[3], rot[3];
   (void) argc, (void) argv;
@@ -51,9 +52,19 @@ main(int argc, char** argv)
   CHECK(my_type_pivot_create(&allocator, &pivot, NULL, &t1), RES_BAD_ARG);
   CHECK(my_type_pivot_create(&allocator, &pivot, &tracking, NULL), RES_BAD_ARG);
   CHECK(my_type_pivot_create(&allocator, &pivot, &tracking, &t1), RES_OK);
+
+  CHECK(my_type_is_pivot(NULL, &p), RES_BAD_ARG);
+  CHECK(my_type_is_pivot(t1, NULL), RES_BAD_ARG);
+  CHECK(my_type_is_pivot(t1, &p), RES_OK);
+  CHECK(p, 1);
+
   CHECK(my_type_ref_put(t1), RES_OK);
 
   CHECK(my_type_create(&allocator, &t1), RES_OK);
+
+  CHECK(my_type_is_pivot(t1, &p), RES_OK);
+  CHECK(p, 0);
+
   CHECK(my_type_add_child(NULL, t1), RES_BAD_ARG);
   CHECK(my_type_add_child(t1, NULL), RES_BAD_ARG);
   CHECK(my_type_add_child(t1, t1), RES_BAD_ARG);
