@@ -916,7 +916,7 @@ sanim_node_get_father
   (const struct sanim_node* node,
    const struct sanim_node** father)
 {
-  if (!node || !father)
+  if (!node || !father || !node->data)
     return RES_BAD_ARG;
   *father = node->data->father;
   return RES_OK;
@@ -927,7 +927,7 @@ sanim_node_get_children_count
   (const struct sanim_node* node,
    size_t* count)
 {
-  if (!node || !count)
+  if (!node || !count || !node->data)
     return RES_BAD_ARG;
   *count = darray_children_size_get(&node->data->children);
   return RES_OK;
@@ -940,7 +940,7 @@ sanim_node_get_child
    const struct sanim_node** child)
 {
   const struct sanim_node* const* children;
-  if (!node || !child)
+  if (!node || !child || !node->data)
     return RES_BAD_ARG;
   if (idx >= darray_children_size_get(&node->data->children))
     return RES_BAD_ARG;
@@ -954,7 +954,7 @@ sanim_node_is_pivot
   (const struct sanim_node* node,
    int* pivot)
 {
-  if (!node || !pivot) return RES_BAD_ARG;
-  *pivot = (node->data && node->data->pivot_data);
+  if (!node || !pivot || !node->data) return RES_BAD_ARG;
+  *pivot = (NULL != node->data->pivot_data);
   return RES_OK;
 }
