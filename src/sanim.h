@@ -89,10 +89,6 @@ enum tracking_policy {
   TRACKING_TYPES_COUNT
 };
 
-struct sanim_policy_sun {
-  char unused;
-};
-
 struct sanim_policy_point {
   /* target can be in local space (ie in the same system than the pivot)
    * or in world space */
@@ -107,7 +103,6 @@ struct sanim_policy_out_dir {
 struct sanim_tracking {
   enum tracking_policy policy;
   union {
-    struct sanim_policy_sun sun;
     struct sanim_policy_point point;
     struct sanim_policy_out_dir out_dir;
   } data;
@@ -119,29 +114,44 @@ BEGIN_DECLS
  ******************************************************************************/
 SANIM_API res_T
 sanim_node_initialize
-  (struct mem_allocator* allocator, /* May be NULL <=> use default allocator */
+  (struct mem_allocator* allocator,
    struct sanim_node* node);
 
 SANIM_API res_T
 sanim_node_initialize_pivot
-  (struct mem_allocator* allocator, /* May be NULL <=> use default allocator */
+  (struct mem_allocator* allocator,
    const struct sanim_pivot* pivot,
    const struct sanim_tracking* tracking,
    struct sanim_node* node);
 
 /* simple copy, no recursion
- * copy content of src into node that must be valid
  * copy rotations, translation and possible pivot information */
 SANIM_API res_T
 sanim_node_copy_initialize
-  (struct mem_allocator* allocator, /* May be NULL <=> use default allocator */
+  (struct mem_allocator* allocator,
    const struct sanim_node* src,
-   struct sanim_node* node);
+   struct sanim_node* dst);
+
+SANIM_API res_T
+sanim_node_is_initialized
+  (const struct sanim_node* node,
+   int* initialized);
 
 SANIM_API res_T
 sanim_node_solve_pivot
   (struct sanim_node* node,
    const double in_dir[3]);
+
+/* Visit the (sub)tree starting at node
+ * Solve pivots if any
+ * Call visitor on every node of the tree with its updated transform
+ * Visit stops if a call to visitor return is not RES_OK */
+SANIM_API res_T
+sanim_node_visit_tree
+  (struct sanim_node* node,
+   const double in_dir[3],
+   void* data,
+   res_T (*visitor)(const struct sanim_node* n, const double transform[12], void* data));
 
 SANIM_API res_T
 sanim_node_release

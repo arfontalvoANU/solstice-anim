@@ -718,6 +718,55 @@ copy_and_normalise_pivot_data
   return RES_OK;
 }
 
+static res_T
+node_solve_pivot
+  (struct sanim_node* node,
+   const double in_dir[3])
+{
+  ASSERT(node && node->data && in_dir && node->data->pivot_data);
+  ASSERT(d3_is_normalized(in_dir));
+
+  switch (node->data->pivot_data->pivot.type) {
+  case PIVOT_SINGLE_AXIS:
+    return pivot_solve_single_axis(node, in_dir);
+    break;
+  case PIVOT_TWO_AXIS:
+    return pivot_solve_two_axis(node, in_dir);
+    break;
+  default: FATAL("Unreachable code.\n"); break;
+  }
+}
+
+static res_T
+visit_tree
+  (struct sanim_node* node,
+   const double in_dir[3],
+   void* data,
+   res_T(*visitor)
+    (const struct sanim_node* n, const double transform[12], void* data))
+{
+  double transform[12];
+  size_t count, i;
+  struct sanim_node* const* children;
+  res_T res = RES_OK;
+  ASSERT(node && node->data && in_dir && visitor);
+  ASSERT(d3_is_normalized(in_dir));
+  if (node->data->pivot_data) {
+    node_solve_pivot(node, in_dir);
+    node_get_transform(node, 1, transform);
+    res = visitor(node, transform, data);
+    if (res != RES_OK) return res;
+  }
+  count = darray_children_size_get(&node->data->children);
+  children = darray_children_data_get(&node->data->children);
+  for (i = 0; i < count; i++) {
+    struct sanim_node* child = children[i];
+    res = visit_tree(child, in_dir, data, visitor);
+    if (res != RES_OK) return res;
+  }
+  return RES_OK;
+}
+
 /*******************************************************************************
 * Exported sanim_node functions
 ******************************************************************************/
@@ -755,20 +804,17 @@ sanim_node_initialize
   (struct mem_allocator* allocator,
    struct sanim_node* node)
 {
-  struct mem_allocator* alloc;
   res_T res = RES_OK;
 
-  if (!node) return RES_BAD_ARG;
-  alloc = allocator ? allocator : &mem_default_allocator;
-
-  node->data = MEM_CALLOC(alloc, 1, sizeof(struct node_data));
+  if (!allocator || !node) return RES_BAD_ARG;
+  node->data = MEM_CALLOC(allocator, 1, sizeof(struct node_data));
   if (!node->data) {
     res = RES_MEM_ERR;
     goto error;
   }
 
-  darray_children_init(alloc, &node->data->children);
-  node->data->allocator = alloc;
+  darray_children_init(allocator, &node->data->children);
+  node->data->allocator = allocator;
 
 exit:
   return res;
@@ -787,15 +833,13 @@ sanim_node_initialize_pivot
    const struct sanim_tracking* tracking,
    struct sanim_node* node)
 {
-  struct mem_allocator* alloc;
   res_T res = RES_OK;
 
-  if (!node || !pivot || !tracking) return RES_BAD_ARG;
+  if (!allocator || !node || !pivot || !tracking) return RES_BAD_ARG;
   res = sanim_node_initialize(allocator, node);
   if (res != RES_OK) goto error;
 
-  alloc = allocator ? allocator : &mem_default_allocator;
-  node->data->pivot_data = MEM_CALLOC(alloc, 1, sizeof(struct pivot_data));
+  node->data->pivot_data = MEM_CALLOC(allocator, 1, sizeof(struct pivot_data));
   if (!node->data->pivot_data) {
     res = RES_MEM_ERR;
     goto error;
@@ -813,36 +857,45 @@ error:
 
 res_T
 sanim_node_copy_initialize
-  (struct mem_allocator* allocator, /* May be NULL <=> use default allocator */
+  (struct mem_allocator* allocator,
    const struct sanim_node* src,
-   struct sanim_node* node)
+   struct sanim_node* dst)
 {
   res_T res = RES_OK;
 
-  if (!node || !src) return RES_BAD_ARG;
-  res = sanim_node_initialize(allocator, node);
+  if (!allocator || !src || !dst) return RES_BAD_ARG;
+  res = sanim_node_initialize(allocator, dst);
   if (res != RES_OK) goto error;
 
   if (src->data->pivot_data) {
-    node->data->pivot_data
-      = MEM_CALLOC(node->data->allocator, 1, sizeof(struct pivot_data));
-    if (!node->data->pivot_data) {
+    dst->data->pivot_data = MEM_CALLOC(allocator, 1, sizeof(struct pivot_data));
+    if (!dst->data->pivot_data) {
       res = RES_MEM_ERR;
       goto error;
     }
-    node->data->pivot_data->angleX = src->data->pivot_data->angleX;
-    node->data->pivot_data->angleZ = src->data->pivot_data->angleZ;
-    node->data->pivot_data->pivot = src->data->pivot_data->pivot;
-    node->data->pivot_data->tracking = src->data->pivot_data->tracking;
+    dst->data->pivot_data->angleX = src->data->pivot_data->angleX;
+    dst->data->pivot_data->angleZ = src->data->pivot_data->angleZ;
+    dst->data->pivot_data->pivot = src->data->pivot_data->pivot;
+    dst->data->pivot_data->tracking = src->data->pivot_data->tracking;
   }
-  d3_set(node->data->rotations, src->data->rotations);
-  d3_set(node->data->translation, src->data->translation);
+  d3_set(dst->data->rotations, src->data->rotations);
+  d3_set(dst->data->translation, src->data->translation);
 
 exit:
   return res;
 error:
-  sanim_node_release(node);
+  sanim_node_release(dst);
   goto exit;
+}
+
+res_T
+sanim_node_is_initialized
+  (const struct sanim_node* node,
+   int* initialized)
+{
+  if (!node || !initialized) return RES_BAD_ARG;
+  *initialized = (node->data != NULL);
+  return RES_OK;
 }
 
 res_T
@@ -851,19 +904,24 @@ sanim_node_solve_pivot
    const double in_dir[3])
 {
   double dir[3];
-  if (!node || !in_dir) return RES_BAD_ARG;
+  if (!node || !node->data || !in_dir) return RES_BAD_ARG;
   if (!node->data->pivot_data) return RES_BAD_ARG;
   if (!d3_normalize(dir, in_dir)) return RES_BAD_ARG;
 
-  switch (node->data->pivot_data->pivot.type) {
-  case PIVOT_SINGLE_AXIS:
-    return pivot_solve_single_axis(node, dir);
-    break;
-  case PIVOT_TWO_AXIS:
-    return pivot_solve_two_axis(node, dir);
-    break;
-  default: FATAL("Unreachable code.\n"); break;
-  }
+  return node_solve_pivot(node, dir);
+}
+
+res_T
+sanim_node_visit_tree
+  (struct sanim_node* node,
+   const double in_dir[3],
+   void* data,
+   res_T (*visitor)(const struct sanim_node* n, const double transform[12], void* data))
+{
+  double dir[3];
+  if (!node || !node->data || !in_dir || !visitor) return RES_BAD_ARG;
+  if (!d3_normalize(dir, in_dir)) return RES_BAD_ARG;
+  return visit_tree(node, dir, data, visitor);
 }
 
 res_T
