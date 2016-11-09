@@ -752,11 +752,12 @@ visit_tree
   ASSERT(node && node->data && in_dir && visitor);
   ASSERT(d3_is_normalized(in_dir));
   if (node->data->pivot_data) {
-    node_solve_pivot(node, in_dir);
-    node_get_transform(node, 1, transform);
-    res = visitor(node, transform, data);
+    res = node_solve_pivot(node, in_dir);
     if (res != RES_OK) return res;
   }
+  node_get_transform(node, 1, transform);
+  res = visitor(node, transform, data);
+  if (res != RES_OK) return res;
   count = darray_children_size_get(&node->data->children);
   children = darray_children_data_get(&node->data->children);
   for (i = 0; i < count; i++) {
