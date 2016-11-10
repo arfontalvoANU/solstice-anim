@@ -98,7 +98,7 @@ struct sanim_policy_point {
 };
 
 struct sanim_policy_node_target {
-  const struct sanim_node* tracked_node;
+  const void* tracked_node;
 };
 
 struct sanim_policy_out_dir {

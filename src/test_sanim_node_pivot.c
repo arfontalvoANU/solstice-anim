@@ -259,13 +259,12 @@ main(int argc, char** argv)
 
   /* 1 axis tracking an invalid node target */
 
+  CHECK(my_type_create(&allocator, &t1), RES_OK);
+  CHECK(my_type_create(&allocator, &t3), RES_OK);
   d3(pivot.data.pivot1.ref_normal, 0, 0, 1);
   d3(pivot.data.pivot1.ref_point, 0, 0, 0);
   CHECK(my_type_track_me(t3, &tracking), RES_OK);
-  
-  CHECK(my_type_create(&allocator, &t1), RES_OK);
   CHECK(my_type_pivot_create(&allocator, &pivot, &tracking, &t2), RES_OK);
-  CHECK(my_type_create(&allocator, &t3), RES_OK);
 
   CHECK(my_type_add_child(t1, t2), RES_OK);
   CHECK(my_type_add_child(t2, t3), RES_OK);
