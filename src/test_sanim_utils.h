@@ -64,7 +64,13 @@ res_T
 my_type_set_translation(struct my_type* t, const double translation[3]);
 
 res_T
+my_type_get_translation(const struct my_type* t, double translation[3]);
+
+res_T
 my_type_set_rotations(struct my_type* t, const double rotations[3]);
+
+res_T
+my_type_get_rotations(const struct my_type* t, double rotations[3]);
 
 res_T
 my_type_get_transform(struct my_type* t, double transform[12]);

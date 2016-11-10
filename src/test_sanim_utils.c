@@ -281,9 +281,21 @@ my_type_set_translation(struct my_type* t, const double translation[3]) {
 }
 
 res_T
+my_type_get_translation(const struct my_type* t, double translation[3]) {
+  if (!t || !translation) return RES_BAD_ARG;
+  return sanim_node_get_translation(&t->node, translation);
+}
+
+res_T
 my_type_set_rotations(struct my_type* t, const double rotations[3]) {
   if (!t || !rotations) return RES_BAD_ARG;
   return sanim_node_set_rotations(&t->node, rotations);
+}
+
+res_T
+my_type_get_rotations(const struct my_type* t, double rotations[3]) {
+  if (!t || !rotations) return RES_BAD_ARG;
+  return sanim_node_get_rotations(&t->node, rotations);
 }
 
 res_T

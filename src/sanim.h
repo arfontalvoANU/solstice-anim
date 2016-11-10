@@ -151,7 +151,8 @@ sanim_node_visit_tree
   (struct sanim_node* node,
    const double in_dir[3],
    void* data,
-   res_T (*visitor)(const struct sanim_node* n, const double transform[12], void* data));
+   res_T (*visitor)(
+     const struct sanim_node* n, const double transform[12], void* data));
 
 SANIM_API res_T
 sanim_node_release
@@ -168,9 +169,19 @@ sanim_node_set_translation
    const double translation[3]);
 
 SANIM_API res_T
+sanim_node_get_translation
+  (const struct sanim_node* node,
+   double translation[3]);
+
+SANIM_API res_T
 sanim_node_set_rotations
   (struct sanim_node* node,
    const double rotations[3]); /* XYZ convention */
+
+SANIM_API res_T
+sanim_node_get_rotations
+  (const struct sanim_node* node,
+   double rotations[3]);
 
 SANIM_API res_T
 sanim_node_get_transform

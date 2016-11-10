@@ -28,7 +28,7 @@ main(int argc, char** argv)
   size_t count;
   int p;
   double transform1[12], transform2[12];
-  double transl[3], rot[3];
+  double transl[3], transl_[3], rot[3], rot_[3];
   (void) argc, (void) argv;
 
   tracking.policy = TRACKING_SUN;
@@ -97,9 +97,19 @@ main(int argc, char** argv)
   CHECK(my_type_set_translation(t1, NULL), RES_BAD_ARG);
   CHECK(my_type_set_translation(t1, transl), RES_OK);
 
+  CHECK(my_type_get_translation(NULL, transl_), RES_BAD_ARG);
+  CHECK(my_type_get_translation(t1, NULL), RES_BAD_ARG);
+  CHECK(my_type_get_translation(t1, transl_), RES_OK);
+  CHECK(d3_eq(transl, transl_), 1);
+
   CHECK(my_type_set_rotations(NULL, rot), RES_BAD_ARG);
   CHECK(my_type_set_rotations(t1, NULL), RES_BAD_ARG);
   CHECK(my_type_set_rotations(t1, rot), RES_OK);
+
+  CHECK(my_type_get_rotations(NULL, rot_), RES_BAD_ARG);
+  CHECK(my_type_get_rotations(t1, NULL), RES_BAD_ARG);
+  CHECK(my_type_get_rotations(t1, rot_), RES_OK);
+  CHECK(d3_eq(rot, rot_), 1);
 
   CHECK(my_type_get_transform(NULL, transform1), RES_BAD_ARG);
   CHECK(my_type_get_transform(t1, NULL), RES_BAD_ARG);

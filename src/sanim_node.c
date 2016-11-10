@@ -952,12 +952,32 @@ sanim_node_set_translation
 }
 
 res_T
+sanim_node_get_translation
+(const struct sanim_node* node,
+  double translation[3])
+{
+  if (!node || !node->data || !translation) return RES_BAD_ARG;
+  d3_set(translation, node->data->translation);
+  return RES_OK;
+}
+
+res_T
 sanim_node_set_rotations
   (struct sanim_node* node,
    const double rotations[3])
 {
   if (!node || !node->data || !rotations) return RES_BAD_ARG;
   d3_set(node->data->rotations, rotations);
+  return RES_OK;
+}
+
+res_T
+sanim_node_get_rotations
+(const struct sanim_node* node,
+  double rotations[3])
+{
+  if (!node || !node->data || !rotations) return RES_BAD_ARG;
+  d3_set(rotations, node->data->rotations);
   return RES_OK;
 }
 
