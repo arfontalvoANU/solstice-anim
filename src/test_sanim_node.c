@@ -129,6 +129,14 @@ main(int argc, char** argv)
   CHECK(my_type_recursive_copy(&allocator, t1, &t1), RES_BAD_ARG);
   CHECK(my_type_recursive_copy(&allocator, t1, &ptr), RES_OK);
 
+  tracking.policy = TRACKING_POINT;
+  tracking.data.node_target.tracked_node = NULL;
+  CHECK(my_type_track_me(NULL, &tracking), RES_BAD_ARG);
+  CHECK(my_type_track_me(t1, NULL), RES_BAD_ARG);
+  CHECK(my_type_track_me(t1, &tracking), RES_OK);
+  CHECK(tracking.policy, TRACKING_NODE_TARGET);
+  CHECK(&t1->node, tracking.data.node_target.tracked_node);
+
   /* release memory */
   CHECK(my_type_ref_put(t1), RES_OK);
   CHECK(my_type_ref_put(t2), RES_OK);

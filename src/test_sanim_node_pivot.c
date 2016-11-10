@@ -22,7 +22,7 @@ int
 main(int argc, char** argv)
 {
   struct mem_allocator allocator;
-  struct my_type *t1, *t2, *t3;
+  struct my_type *t1, *t2, *t3, *target;
   struct sanim_pivot pivot;
   struct sanim_tracking tracking;
   double transform[12];
@@ -256,6 +256,65 @@ main(int argc, char** argv)
   CHECK(my_type_ref_put(t1), RES_OK);
   CHECK(my_type_ref_put(t2), RES_OK);
   CHECK(my_type_ref_put(t3), RES_OK);
+
+  /* 1 axis tracking an invalid node target */
+
+  d3(pivot.data.pivot1.ref_normal, 0, 0, 1);
+  d3(pivot.data.pivot1.ref_point, 0, 0, 0);
+  CHECK(my_type_track_me(t3, &tracking), RES_OK);
+  
+  CHECK(my_type_create(&allocator, &t1), RES_OK);
+  CHECK(my_type_pivot_create(&allocator, &pivot, &tracking, &t2), RES_OK);
+  CHECK(my_type_create(&allocator, &t3), RES_OK);
+
+  CHECK(my_type_add_child(t1, t2), RES_OK);
+  CHECK(my_type_add_child(t2, t3), RES_OK);
+
+  CHECK(my_type_set_translation(t1, transl), RES_OK);
+  CHECK(my_type_set_rotations(t1, rot), RES_OK);
+  CHECK(my_type_set_translation(t2, transl), RES_OK);
+  CHECK(my_type_set_translation(t3, transl), RES_OK);
+
+  d3(in_dir, 1, 0.1, 0);
+  /* target if after a pivot */
+  CHECK(my_type_solve_pivot(t2, in_dir), RES_BAD_ARG);
+
+  CHECK(my_type_ref_put(t1), RES_OK);
+  CHECK(my_type_ref_put(t2), RES_OK);
+  CHECK(my_type_ref_put(t3), RES_OK);
+
+  /* 1 axis tracking a node target */
+
+  CHECK(my_type_create(&allocator, &target), RES_OK);
+  d3(tmp, 0, 0, 10 * sqrt(2));
+  CHECK(my_type_set_translation(target, tmp), RES_OK);
+
+  d3(pivot.data.pivot1.ref_normal, 0, 0, 1);
+  d3(pivot.data.pivot1.ref_point, 0, 0, 0);
+  CHECK(my_type_track_me(target, &tracking), RES_OK);
+
+  CHECK(my_type_create(&allocator, &t1), RES_OK);
+  CHECK(my_type_pivot_create(&allocator, &pivot, &tracking, &t2), RES_OK);
+  CHECK(my_type_create(&allocator, &t3), RES_OK);
+
+  CHECK(my_type_add_child(t1, t2), RES_OK);
+  CHECK(my_type_add_child(t2, t3), RES_OK);
+
+  CHECK(my_type_set_translation(t1, transl), RES_OK);
+  CHECK(my_type_set_rotations(t1, rot), RES_OK);
+  CHECK(my_type_set_translation(t2, transl), RES_OK);
+  CHECK(my_type_set_translation(t3, transl), RES_OK);
+
+  d3(in_dir, 1, 0.1, 0);
+  CHECK(my_type_solve_pivot(t2, in_dir), RES_OK);
+  CHECK(my_type_get_transform(t3, transform), RES_OK);
+  d33_muld3(n, transform, pivot.data.pivot1.ref_normal);
+  CHECK(d3_eq_eps(n, d3(tmp, -sqrt(2) / 2, 0, +sqrt(2) / 2), 1e-7), 1);
+  
+  CHECK(my_type_ref_put(t1), RES_OK);
+  CHECK(my_type_ref_put(t2), RES_OK);
+  CHECK(my_type_ref_put(t3), RES_OK);
+  CHECK(my_type_ref_put(target), RES_OK);
 
   /* 
    * 2 axis pivots

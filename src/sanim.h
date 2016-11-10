@@ -84,6 +84,7 @@ struct sanim_pivot {
 enum tracking_policy {
   TRACKING_SUN, /* orient the device to face the sun */
   TRACKING_POINT, /* direct the output flux towards a point */
+  TRACKING_NODE_TARGET, /* direct the output flux towards a ponctual animated target */
   TRACKING_OUT_DIR, /* direct the output flux towards a given dir */
 
   TRACKING_TYPES_COUNT
@@ -96,6 +97,10 @@ struct sanim_policy_point {
   char target_is_local;
 };
 
+struct sanim_policy_node_target {
+  const struct sanim_node* tracked_node;
+};
+
 struct sanim_policy_out_dir {
   double u[3]; /* in world space */
 };
@@ -104,6 +109,7 @@ struct sanim_tracking {
   enum tracking_policy policy;
   union {
     struct sanim_policy_point point;
+    struct sanim_policy_node_target node_target;
     struct sanim_policy_out_dir out_dir;
   } data;
 };
@@ -155,6 +161,11 @@ sanim_node_visit_tree
      const struct sanim_node* n, const double transform[12], void* data));
 
 SANIM_API res_T
+sanim_node_track_me
+  (const struct sanim_node* node,
+   struct sanim_tracking* tracking);
+
+SANIM_API res_T
 sanim_node_release
   (struct sanim_node* node);
 
@@ -185,7 +196,7 @@ sanim_node_get_rotations
 
 SANIM_API res_T
 sanim_node_get_transform
-  (struct sanim_node* node,
+  (const struct sanim_node* node,
    double transform[12]); /* 3x4 column major matrix */
 
 SANIM_API res_T

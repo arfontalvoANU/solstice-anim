@@ -82,6 +82,9 @@ res_T
 my_type_is_pivot(struct my_type* t, int* pivot);
 
 res_T
+my_type_track_me(const struct my_type* t, struct sanim_tracking* tracking);
+
+res_T
 my_type_get_father
   (const struct my_type* t,
    const struct my_type** father);

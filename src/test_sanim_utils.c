@@ -314,6 +314,11 @@ my_type_is_pivot(struct my_type* t, int* pivot) {
   return sanim_node_is_pivot(&t->node, pivot);
 }
 
+res_T
+my_type_track_me(const struct my_type* t, struct sanim_tracking* tracking) {
+  return sanim_node_track_me(&t->node, tracking);
+}
+
 char
 d3_is_zero_eps(const double v[3], const double eps) {
   int x;

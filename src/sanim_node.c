@@ -182,7 +182,7 @@ get_pivot_transform(const struct pivot_data* pivot, double transform[12]) {
 
 static double*
 node_get_own_transform
-  (struct sanim_node* node,
+  (const struct sanim_node* node,
    const int include_pivot,
    double transform[12])
 {
@@ -202,7 +202,7 @@ node_get_own_transform
 }
 
 static double*
-compose_node_transform(struct sanim_node* node, double accum[12]) {
+compose_node_transform(const struct sanim_node* node, double accum[12]) {
   double local[12];
   ASSERT(node && node->data && accum);
   if (node->data->pivot_data) {
@@ -216,11 +216,11 @@ compose_node_transform(struct sanim_node* node, double accum[12]) {
 
 static void
 node_get_transform
-  (struct sanim_node* node,
+  (const struct sanim_node* node,
    const int include_own_pivot,
    double transform[12])
 {
-  struct sanim_node* father;
+  const struct sanim_node* father;
   ASSERT(node && node->data && transform);
   father = node->data->father;
   node_get_own_transform(node, include_own_pivot, transform);
@@ -304,7 +304,8 @@ pivot_solve_single_axis_line
   pivot_data = node->data->pivot_data;
   ASSERT(pivot_data);
   ASSERT(pivot_data->pivot.type == PIVOT_SINGLE_AXIS);
-  ASSERT(pivot_data->tracking.policy == TRACKING_POINT);
+  ASSERT(pivot_data->tracking.policy == TRACKING_POINT
+    || pivot_data->tracking.policy == TRACKING_NODE_TARGET);
   ASSERT(d3_is_normalized(in_dir));
 
   ref_normal_2D = pivot_data->pivot.data.pivot1.ref_normal + 1;
@@ -323,11 +324,24 @@ pivot_solve_single_axis_line
   }
 
   /* get target point in local space */
-  if (pivot_data->tracking.data.point.target_is_local) {
-    d3_set(local_target, pivot_data->tracking.data.point.target);
+  if (pivot_data->tracking.policy == TRACKING_POINT) {
+    if (pivot_data->tracking.data.point.target_is_local) {
+      d3_set(local_target, pivot_data->tracking.data.point.target);
+    }
+    else {
+      d3_sub(local_target, pivot_data->tracking.data.point.target, mat + 9);
+      d33_muld3(local_target, inv, local_target);
+    }
   }
   else {
-    d3_sub(local_target, pivot_data->tracking.data.point.target, mat + 9);
+    double transform[12];
+    const struct sanim_node* target
+      = node->data->pivot_data->tracking.data.node_target.tracked_node;
+    ASSERT(target && target->data);
+    ASSERT(pivot_data->tracking.policy == TRACKING_NODE_TARGET);
+    if (is_after_pivot(target)) return RES_BAD_ARG;
+    SANIM(node_get_transform(target, transform));
+    d3_sub(local_target, transform + 9, mat + 9);
     d33_muld3(local_target, inv, local_target);
   }
 
@@ -454,6 +468,7 @@ pivot_solve_single_axis
     res = pivot_solve_single_axis_sun(node, in_dir);
     break;
   case TRACKING_POINT:
+  case TRACKING_NODE_TARGET:
     /* track the X line that includes ref_point */
     res = pivot_solve_single_axis_line(node, in_dir);
     break;
@@ -529,7 +544,8 @@ pivot_solve_two_axis_point
   pivot_data = node->data->pivot_data;
   ASSERT(pivot_data);
   ASSERT(pivot_data->pivot.type == PIVOT_TWO_AXIS);
-  ASSERT(pivot_data->tracking.policy == TRACKING_POINT);
+  ASSERT(pivot_data->tracking.policy == TRACKING_POINT
+    || pivot_data->tracking.policy == TRACKING_NODE_TARGET);
   ASSERT(d3_is_normalized(in_dir));
 
   d3_set(ref_point, pivot_data->pivot.data.pivot2.ref_point);
@@ -542,11 +558,24 @@ pivot_solve_two_axis_point
   ASSERT(d3_is_normalized(local_in));
 
   /* get target point in local space */
-  if (pivot_data->tracking.data.point.target_is_local) {
-    d3_set(local_target, pivot_data->tracking.data.point.target);
+  if (pivot_data->tracking.policy == TRACKING_POINT) {
+    if (pivot_data->tracking.data.point.target_is_local) {
+      d3_set(local_target, pivot_data->tracking.data.point.target);
+    }
+    else {
+      d3_sub(local_target, pivot_data->tracking.data.point.target, mat + 9);
+      d33_muld3(local_target, inv, local_target);
+    }
   }
   else {
-    d3_sub(local_target, pivot_data->tracking.data.point.target, mat + 9);
+    double transform[12];
+    const struct sanim_node* target
+      = node->data->pivot_data->tracking.data.node_target.tracked_node;
+    ASSERT(target && target->data);
+    ASSERT(pivot_data->tracking.policy == TRACKING_NODE_TARGET);
+    if (is_after_pivot(target)) return RES_BAD_ARG;
+    SANIM(node_get_transform(target, transform));
+    d3_sub(local_target, transform + 9, mat + 9);
     d33_muld3(local_target, inv, local_target);
   }
 
@@ -666,6 +695,7 @@ pivot_solve_two_axis
     res = pivot_solve_two_axis_sun(node, in_dir);
     break;
   case TRACKING_POINT:
+  case TRACKING_NODE_TARGET:
     res = pivot_solve_two_axis_point(node, in_dir);
     break;
   case TRACKING_OUT_DIR:
@@ -685,7 +715,8 @@ copy_and_normalise_pivot_data
   dest->pivot.type = pivot->type;
   switch (pivot->type) {
   case PIVOT_SINGLE_AXIS:
-    if (!d3_normalize(dest->pivot.data.pivot1.ref_normal, pivot->data.pivot1.ref_normal))
+    if (!d3_normalize(
+      dest->pivot.data.pivot1.ref_normal, pivot->data.pivot1.ref_normal))
       return RES_BAD_ARG;
     if (dest->pivot.data.pivot1.ref_normal[0])
       /* ref_normal not in the YZ plane */
@@ -707,7 +738,12 @@ copy_and_normalise_pivot_data
     break;
   case TRACKING_POINT:
     d3_set(dest->tracking.data.point.target, tracking->data.point.target);
-    dest->tracking.data.point.target_is_local = tracking->data.point.target_is_local;
+    dest->tracking.data.point.target_is_local
+      = tracking->data.point.target_is_local;
+    break;
+  case TRACKING_NODE_TARGET:
+    dest->tracking.data.node_target.tracked_node
+      = tracking->data.node_target.tracked_node;
     break;
   case TRACKING_OUT_DIR:
     if (!d3_normalize(dest->tracking.data.out_dir.u, tracking->data.out_dir.u))
@@ -926,6 +962,17 @@ sanim_node_visit_tree
 }
 
 res_T
+sanim_node_track_me
+  (const struct sanim_node* node,
+   struct sanim_tracking* tracking)
+{
+  if (!node || !node->data || !tracking) return RES_BAD_ARG;
+  tracking->policy = TRACKING_NODE_TARGET;
+  tracking->data.node_target.tracked_node = node;
+  return RES_OK;
+}
+
+res_T
 sanim_node_release
   (struct sanim_node* node)
 {
@@ -982,7 +1029,7 @@ sanim_node_get_rotations
 }
 
 res_T
-sanim_node_get_transform(struct sanim_node* node, double transform[12])
+sanim_node_get_transform(const struct sanim_node* node, double transform[12])
 {
   if (!node || !node->data || !transform)
     return RES_BAD_ARG;
