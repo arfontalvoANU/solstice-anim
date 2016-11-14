@@ -23,8 +23,8 @@ main(int argc, char** argv)
 {
   struct mem_allocator allocator;
   struct my_type *t1, *t2, *ptr;
-  struct sanim_pivot pivot;
-  struct sanim_tracking tracking;
+  struct sanim_pivot pivot = SANIM_PIVOT_NULL;
+  struct sanim_tracking tracking = SANIM_TRACKING_NULL;
   size_t count;
   int p;
   double transform1[12], transform2[12];

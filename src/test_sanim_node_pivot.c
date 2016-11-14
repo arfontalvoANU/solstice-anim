@@ -23,8 +23,8 @@ main(int argc, char** argv)
 {
   struct mem_allocator allocator;
   struct my_type *t1, *t2, *t3, *target;
-  struct sanim_pivot pivot;
-  struct sanim_tracking tracking;
+  struct sanim_pivot pivot = SANIM_PIVOT_NULL;
+  struct sanim_tracking tracking = SANIM_TRACKING_NULL;
   double transform[12];
   double transl[3], rot[3], in_dir[3], n[3], tmp[3];
   const double y_ref_normal[3] = { 0, 1, 0 };
