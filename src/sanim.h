@@ -50,6 +50,8 @@ struct node_data;
 struct sanim_node {
   struct node_data* data;
 };
+#define SANIM_NODE_NULL__ { NULL }
+static const struct sanim_node SANIM_NODE_NULL = SANIM_NODE_NULL__;
 
 /* types to describe pivots */
 enum pivot_type {
@@ -64,6 +66,8 @@ struct sanim_pivot_1 {
   double ref_point[3]; /* in post-pivot local space */
   double ref_normal[3]; /* normal without rotation; used to compute output dir */
 };
+#define SANIM_PIVOT1_DEFAULT__ { {0,0,0}, {0,0,1} }
+static const struct sanim_pivot_1 SANIM_PIVOT1_DEFAULT = SANIM_PIVOT1_DEFAULT__;
 
 /* pivot with Z then X rotation axis */
 struct sanim_pivot_2 {
@@ -71,6 +75,8 @@ struct sanim_pivot_2 {
   double ref_point[3]; /* in post-pivot local space */
   /* ref_normal is <0,1,0> */
 };
+#define SANIM_PIVOT2_DEFAULT__ { 0, {0,0,0} }
+static const struct sanim_pivot_2 SANIM_PIVOT2_DEFAULT = SANIM_PIVOT2_DEFAULT__;
 
 struct sanim_pivot {
   enum pivot_type type;
@@ -79,6 +85,8 @@ struct sanim_pivot {
     struct sanim_pivot_2 pivot2;
   } data;
 };
+#define SANIM_PIVOT_NULL__ { PIVOT_TYPES_COUNT__, {SANIM_PIVOT1_DEFAULT__} }
+static const struct sanim_pivot SANIM_PIVOT_NULL = SANIM_PIVOT_NULL__;
 
 /* types to describe tracking policies */
 enum tracking_policy {
@@ -87,7 +95,7 @@ enum tracking_policy {
   TRACKING_NODE_TARGET, /* direct the output flux towards a ponctual animated target */
   TRACKING_OUT_DIR, /* direct the output flux towards a given dir */
 
-  TRACKING_TYPES_COUNT
+  TRACKING_POLICIES_COUNT
 };
 
 struct sanim_policy_point {
@@ -96,14 +104,21 @@ struct sanim_policy_point {
   double target[3];
   char target_is_local;
 };
+#define SANIM_POINT_POLICY_DEFAULT__ { {0,0,0}, 0 }
+static const struct sanim_policy_point SANIM_POINT_POLICY_DEFAULT = SANIM_POINT_POLICY_DEFAULT__;
 
 struct sanim_policy_node_target {
   const void* tracked_node;
 };
+#define SANIM_NODE_TARGET_POLICY_NULL__ { NULL }
+static const struct sanim_policy_node_target SANIM_NODE_TARGET_POLICY_NULL = SANIM_NODE_TARGET_POLICY_NULL__;
 
 struct sanim_policy_out_dir {
   double u[3]; /* in world space */
 };
+#define SANIM_OUT_DIR_POLICY_DEFAULT__ { {0,0,0} }
+static const struct sanim_policy_point SANIM_OUT_DIR_POLICY_DEFAULT = SANIM_OUT_DIR_POLICY_DEFAULT__;
+
 
 struct sanim_tracking {
   enum tracking_policy policy;
@@ -113,6 +128,9 @@ struct sanim_tracking {
     struct sanim_policy_out_dir out_dir;
   } data;
 };
+#define SANIM_TRACKING_NULL__ { TRACKING_POLICIES_COUNT, {SANIM_POINT_POLICY_DEFAULT__} }
+static const struct sanim_tracking SANIM_TRACKING_NULL = SANIM_TRACKING_NULL__;
+
 BEGIN_DECLS
 
 /*******************************************************************************
