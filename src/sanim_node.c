@@ -340,7 +340,7 @@ pivot_solve_single_axis_line
     ASSERT(target && target->data);
     ASSERT(pivot_data->tracking.policy == TRACKING_NODE_TARGET);
     if (is_after_pivot(target)) return RES_BAD_ARG;
-    SANIM(node_get_transform(target, transform));
+    node_get_transform(target, 0, transform);
     d3_sub(local_target, transform + 9, mat + 9);
     d33_muld3(local_target, inv, local_target);
   }
@@ -574,7 +574,7 @@ pivot_solve_two_axis_point
     ASSERT(target && target->data);
     ASSERT(pivot_data->tracking.policy == TRACKING_NODE_TARGET);
     if (is_after_pivot(target)) return RES_BAD_ARG;
-    SANIM(node_get_transform(target, transform));
+    node_get_transform(target, 0, transform);
     d3_sub(local_target, transform + 9, mat + 9);
     d33_muld3(local_target, inv, local_target);
   }
