@@ -178,6 +178,16 @@ sanim_node_visit_tree
    res_T (*visitor)(
      const struct sanim_node* n, const double transform[12], void* data));
 
+/* Visit the (sub)tree starting at node and call cmp on the nodes
+ * Stop if found is set to non-zero or if a call to cmp return is not RES_OK */
+SANIM_API res_T
+sanim_node_search_tree
+  (const struct sanim_node* node,
+   void* data,
+   res_T(*cmp)(
+     const struct sanim_node* n, void* data, int* found),
+   int* found);
+
 SANIM_API res_T
 sanim_node_track_me
   (const struct sanim_node* node,

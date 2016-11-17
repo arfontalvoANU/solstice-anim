@@ -1055,6 +1055,32 @@ sanim_node_visit_tree
 }
 
 res_T
+sanim_node_search_tree
+  (const struct sanim_node* node,
+   void* data,
+   res_T(*cmp)(
+     const struct sanim_node* n, void* data, int* found),
+   int* found)
+{
+  size_t count, i;
+  struct sanim_node* const* children;
+  res_T res = RES_OK;
+  if (!node || !node->data || !cmp || !found) return RES_BAD_ARG;
+
+  res = cmp(node, data, found);
+  if (*found || res != RES_OK) return res;
+
+  count = darray_children_size_get(&node->data->children);
+  children = darray_children_data_get(&node->data->children);
+  for (i = 0; i < count; i++) {
+    struct sanim_node* child = children[i];
+    res = sanim_node_search_tree(child, data, cmp, found);
+    if (*found || res != RES_OK) return res;
+  }
+  return RES_OK;
+}
+
+res_T
 sanim_node_track_me
   (const struct sanim_node* node,
    struct sanim_tracking* tracking)
