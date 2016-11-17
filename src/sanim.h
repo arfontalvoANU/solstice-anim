@@ -167,7 +167,7 @@ sanim_node_solve_pivot
    const double in_dir[3]);
 
 /* Visit the (sub)tree starting at node
- * Solve pivots if any
+ * Solve pivots if any (an ancestor pivot would not be solved/updated)
  * Call visitor on every node of the tree with its updated transform
  * Visit stops if a call to visitor return is not RES_OK */
 SANIM_API res_T

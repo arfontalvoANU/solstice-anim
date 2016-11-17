@@ -98,6 +98,7 @@ if(NOT NO_TEST)
   new_test(test_sanim_node)
   new_test(test_sanim_node_transform)
   new_test(test_sanim_node_pivot)
+  new_test(test_sanim_visit)
 endif()
 
 ################################################################################

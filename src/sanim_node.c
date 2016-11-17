@@ -87,7 +87,7 @@ get_Xpivot_transform
 }
 
 static double*
-compose_Xpivot_transform
+compose_Xpivot_transform_L
   (const double angle,
    const double spacing,
    double accum[12])
@@ -108,7 +108,7 @@ get_Zpivot_transform(const double angle, double transform[12]) {
 }
 
 static double*
-compose_Zpivot_transform(const double angle, double accum[12]) {
+compose_Zpivot_transform_L(const double angle, double accum[12]) {
   double pivot[12];
   ASSERT(accum);
   get_Zpivot_transform(angle, pivot);
@@ -125,34 +125,34 @@ get_ZXpivot_transform
 {
   ASSERT(transform);
   get_Xpivot_transform(angleX, spacing, transform);
-  compose_Zpivot_transform(angleZ, transform);
+  compose_Zpivot_transform_L(angleZ, transform);
   return transform;
 }
 
 static double*
-compose_ZXpivot_transform
+compose_ZXpivot_transform_L
   (const double angleZ,
    const double angleX,
    const double spacing,
    double accum[12])
 {
   ASSERT(accum);
-  compose_Xpivot_transform(angleX, spacing, accum);
-  compose_Zpivot_transform(angleZ, accum);
+  compose_Xpivot_transform_L(angleX, spacing, accum);
+  compose_Zpivot_transform_L(angleZ, accum);
   return accum;
 }
 
 static double*
-compose_pivot_transform(const struct pivot_data* pivot, double accum[12]) {
+compose_pivot_transform_L(const struct pivot_data* pivot, double accum[12]) {
   ASSERT(pivot && accum);
   switch (pivot->pivot.type) {
   case PIVOT_SINGLE_AXIS: {
     ASSERT(pivot->angleZ == 0);
-    compose_Xpivot_transform(pivot->angleX, 0, accum);
+    compose_Xpivot_transform_L(pivot->angleX, 0, accum);
     break;
   }
   case PIVOT_TWO_AXIS: {
-    compose_ZXpivot_transform(
+    compose_ZXpivot_transform_L(
         pivot->angleZ, pivot->angleX, pivot->pivot.data.pivot2.spacing, accum);
     break;
   }
@@ -202,11 +202,11 @@ node_get_own_transform
 }
 
 static double*
-compose_node_transform(const struct sanim_node* node, double accum[12]) {
+compose_node_transform_L(const struct sanim_node* node, double accum[12]) {
   double local[12];
   ASSERT(node && node->data && accum);
   if (node->data->pivot_data) {
-    compose_pivot_transform(node->data->pivot_data, accum);
+    compose_pivot_transform_L(node->data->pivot_data, accum);
   }
   d33_rotation(local, SPLIT3(node->data->rotations));
   d3_set(local + 9, node->data->translation);
@@ -225,7 +225,7 @@ node_get_transform
   father = node->data->father;
   node_get_own_transform(node, include_own_pivot, transform);
   while (father) {
-    compose_node_transform(father, transform);
+    compose_node_transform_L(father, transform);
     father = father->data->father;
   }
 }
@@ -773,32 +773,102 @@ node_solve_pivot
   }
 }
 
+static double*
+compose_Xpivot_transform_R
+  (const double angle,
+   const double spacing,
+   double accum[12])
+{
+  double pivot[12];
+  ASSERT(accum);
+  get_Xpivot_transform(angle, spacing, pivot);
+  d34_muld34(accum, accum, pivot);
+  return accum;
+}
+
+static double*
+compose_Zpivot_transform_R(const double angle, double accum[12]) {
+  double pivot[12];
+  ASSERT(accum);
+  get_Zpivot_transform(angle, pivot);
+  d34_muld34(accum, accum, pivot);
+  return accum;
+}
+
+static double*
+compose_ZXpivot_transform_R
+  (const double angleZ,
+   const double angleX,
+   const double spacing,
+   double accum[12])
+{
+  ASSERT(accum);
+  compose_Zpivot_transform_R(angleZ, accum);
+  compose_Xpivot_transform_R(angleX, spacing, accum);
+  return accum;
+}
+
+static double*
+compose_pivot_transform_R(double accum[12], const struct pivot_data* pivot) {
+  ASSERT(pivot && accum);
+  switch (pivot->pivot.type) {
+  case PIVOT_SINGLE_AXIS: {
+    ASSERT(pivot->angleZ == 0);
+    compose_Xpivot_transform_R(pivot->angleX, 0, accum);
+    break;
+  }
+  case PIVOT_TWO_AXIS: {
+    compose_ZXpivot_transform_R(
+      pivot->angleZ, pivot->angleX, pivot->pivot.data.pivot2.spacing, accum);
+    break;
+  }
+  default: FATAL("Unreachable code.\n"); break;
+  }
+  return accum;
+}
+
+static double*
+compose_node_transform_R(double accum[12], const struct sanim_node* node) {
+  double local[12];
+  ASSERT(node && node->data && accum);
+  d33_rotation(local, SPLIT3(node->data->rotations));
+  d3_set(local + 9, node->data->translation);
+  d34_muld34(accum, accum, local);
+  if (node->data->pivot_data) {
+    compose_pivot_transform_R(accum, node->data->pivot_data);
+  }
+  return accum;
+}
+
 static res_T
 visit_tree
   (struct sanim_node* node,
    const double in_dir[3],
    void* data,
-   res_T(*visitor)
-    (const struct sanim_node* n, const double transform[12], void* data))
+   res_T(*visitor)(
+     const struct sanim_node* n, const double transform[12], void* data),
+   double transform[12])
 {
-  double transform[12];
   size_t count, i;
   struct sanim_node* const* children;
   res_T res = RES_OK;
   ASSERT(node && node->data && in_dir && visitor);
   ASSERT(d3_is_normalized(in_dir));
+
   if (node->data->pivot_data) {
     res = node_solve_pivot(node, in_dir);
     if (res != RES_OK) return res;
   }
-  node_get_transform(node, 1, transform);
+
+  compose_node_transform_R(transform, node);
   res = visitor(node, transform, data);
   if (res != RES_OK) return res;
+
   count = darray_children_size_get(&node->data->children);
   children = darray_children_data_get(&node->data->children);
   for (i = 0; i < count; i++) {
     struct sanim_node* child = children[i];
-    res = visit_tree(child, in_dir, data, visitor);
+    res = visit_tree(child, in_dir, data, visitor, transform);
     if (res != RES_OK) return res;
   }
   return RES_OK;
@@ -953,12 +1023,35 @@ sanim_node_visit_tree
   (struct sanim_node* node,
    const double in_dir[3],
    void* data,
-   res_T (*visitor)(const struct sanim_node* n, const double transform[12], void* data))
+   res_T(*visitor)(
+     const struct sanim_node* n, const double transform[12], void* data))
 {
   double dir[3];
+  double transform[12];
+  size_t count, i;
+  struct sanim_node* const* children;
+  res_T res = RES_OK;
   if (!node || !node->data || !in_dir || !visitor) return RES_BAD_ARG;
   if (!d3_normalize(dir, in_dir)) return RES_BAD_ARG;
-  return visit_tree(node, dir, data, visitor);
+
+  if (node->data->pivot_data) {
+    res = node_solve_pivot(node, in_dir);
+    if (res != RES_OK) return res;
+  }
+
+  /* node transform, including possible ascendants */
+  node_get_transform(node, 1, transform);
+  res = visitor(node, transform, data);
+  if (res != RES_OK) return res;
+
+  count = darray_children_size_get(&node->data->children);
+  children = darray_children_data_get(&node->data->children);
+  for (i = 0; i < count; i++) {
+    struct sanim_node* child = children[i];
+    res = visit_tree(child, dir, data, visitor, transform);
+    if (res != RES_OK) return res;
+  }
+  return RES_OK;
 }
 
 res_T
