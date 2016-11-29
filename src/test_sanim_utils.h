@@ -1,17 +1,17 @@
 /* Copyright (C) CNRS 2016
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program. If not, see <http://www.gnu.org/licenses/>. */
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 #ifndef TEST_SANIM_UTILS_H
 #define TEST_SANIM_UTILS_H
@@ -87,7 +87,7 @@ my_type_track_me(const struct my_type* t, struct sanim_tracking* tracking);
 res_T
 my_type_get_father
   (const struct my_type* t,
-   const struct my_type** father);
+   struct my_type** father);
 
 res_T
 my_type_get_children_count(const struct my_type* t, size_t* count);
@@ -96,7 +96,7 @@ res_T
 my_type_get_child
   (const struct my_type* t,
    const size_t idx,
-   const struct my_type** child);
+   struct my_type** child);
 
 res_T
 my_type_recursive_copy
@@ -126,3 +126,4 @@ void
 check_memory_allocator(struct mem_allocator* allocator);
 
 #endif /* TEST_SANIM_UTILS_H */
+

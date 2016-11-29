@@ -1,17 +1,17 @@
 /* Copyright (C) CNRS 2016
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program. If not, see <http://www.gnu.org/licenses/>. */
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 #ifndef SANIM_H
 #define SANIM_H
@@ -28,9 +28,9 @@
 #define SANIM_API extern IMPORT_SYM
 #endif
 
-/* Helper macro that asserts if the invocation of the Solstice Anim function `Func'
-* returns an error. One should use this macro on Solstice Anim function calls for which
-* no explicit error checking is performed */
+/* Helper macro that asserts if the invocation of the Solstice Anim function
+ * `Func' returns an error. One should use this macro on Solstice Anim function
+ * calls for which no explicit error checking is performed */
 #ifndef NDEBUG
 #define SANIM(Func) ASSERT(sanim_ ## Func == RES_OK)
 #else
@@ -105,19 +105,22 @@ struct sanim_policy_point {
   char target_is_local;
 };
 #define SANIM_POINT_POLICY_DEFAULT__ { {0,0,0}, 0 }
-static const struct sanim_policy_point SANIM_POINT_POLICY_DEFAULT = SANIM_POINT_POLICY_DEFAULT__;
+static const struct sanim_policy_point SANIM_POINT_POLICY_DEFAULT =
+  SANIM_POINT_POLICY_DEFAULT__;
 
 struct sanim_policy_node_target {
   const void* tracked_node;
 };
 #define SANIM_NODE_TARGET_POLICY_NULL__ { NULL }
-static const struct sanim_policy_node_target SANIM_NODE_TARGET_POLICY_NULL = SANIM_NODE_TARGET_POLICY_NULL__;
+static const struct sanim_policy_node_target SANIM_NODE_TARGET_POLICY_NULL =
+  SANIM_NODE_TARGET_POLICY_NULL__;
 
 struct sanim_policy_out_dir {
   double u[3]; /* in world space */
 };
 #define SANIM_OUT_DIR_POLICY_DEFAULT__ { {0,0,0} }
-static const struct sanim_policy_point SANIM_OUT_DIR_POLICY_DEFAULT = SANIM_OUT_DIR_POLICY_DEFAULT__;
+static const struct sanim_policy_out_dir SANIM_OUT_DIR_POLICY_DEFAULT =
+  SANIM_OUT_DIR_POLICY_DEFAULT__;
 
 
 struct sanim_tracking {
@@ -128,7 +131,8 @@ struct sanim_tracking {
     struct sanim_policy_out_dir out_dir;
   } data;
 };
-#define SANIM_TRACKING_NULL__ { TRACKING_POLICIES_COUNT, {SANIM_POINT_POLICY_DEFAULT__} }
+#define SANIM_TRACKING_NULL__ \
+  { TRACKING_POLICIES_COUNT, {SANIM_POINT_POLICY_DEFAULT__} }
 static const struct sanim_tracking SANIM_TRACKING_NULL = SANIM_TRACKING_NULL__;
 
 BEGIN_DECLS
@@ -175,8 +179,8 @@ sanim_node_visit_tree
   (struct sanim_node* node,
    const double in_dir[3],
    void* data,
-   res_T (*visitor)(
-     const struct sanim_node* n, const double transform[12], void* data));
+   res_T (*visitor)
+    (const struct sanim_node* n, const double transform[12], void* data));
 
 /* Visit the (sub)tree starting at node and call cmp on the nodes
  * Stop if found is set to non-zero or if a call to cmp return is not RES_OK */
@@ -184,8 +188,7 @@ SANIM_API res_T
 sanim_node_search_tree
   (const struct sanim_node* node,
    void* data,
-   res_T(*cmp)(
-     const struct sanim_node* n, void* data, int* found),
+   res_T(*cmp)(const struct sanim_node* n, void* data, int* found),
    int* found);
 
 SANIM_API res_T

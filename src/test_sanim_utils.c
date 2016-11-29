@@ -129,9 +129,9 @@ error:
 res_T
 my_type_get_father
   (const struct my_type* t,
-   const struct my_type** father)
+   struct my_type** father)
 {
-  struct sanim_node* tmp;
+  const struct sanim_node* tmp;
   res_T res = RES_OK;
   if (!t || !father) return RES_BAD_ARG;
   res = sanim_node_get_father(&t->node, &tmp);
@@ -142,8 +142,7 @@ my_type_get_father
 
 res_T
 my_type_get_children_count
-  (const struct my_type* t,
-   size_t* count)
+  (const struct my_type* t, size_t* count)
 {
   return sanim_node_get_children_count(&t->node, count);
 }
@@ -152,9 +151,9 @@ res_T
 my_type_get_child
   (const struct my_type* t,
    const size_t idx,
-   const struct my_type** child)
+   struct my_type** child)
 {
-  struct sanim_node* tmp;
+  const struct sanim_node* tmp;
   res_T res = RES_OK;
   if (!t || !child) return RES_BAD_ARG;
   res = sanim_node_get_child(&t->node, idx, &tmp);

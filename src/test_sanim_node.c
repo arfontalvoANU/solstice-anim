@@ -117,7 +117,7 @@ main(int argc, char** argv)
 
   CHECK(my_type_copy_create(NULL, &ptr), RES_BAD_ARG);
   CHECK(my_type_copy_create(t1, NULL), RES_BAD_ARG);
-  //t1->my_data = 1;
+  /*t1->my_data = 1;*/
   CHECK(my_type_copy_create(t1, &ptr), RES_OK);
   CHECK(t1->my_data, ptr->my_data);
   CHECK(my_type_get_transform(ptr, transform2), RES_OK);

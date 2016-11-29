@@ -1,17 +1,17 @@
 /* Copyright (C) CNRS 2016
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program. If not, see <http://www.gnu.org/licenses/>. */
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 #include "sanim_node_c.h"
 #include "sanim.h"
@@ -24,8 +24,8 @@
 #include <math.h>
 
 /*******************************************************************************
-* Helper functions
-******************************************************************************/
+ * Helper functions
+ ******************************************************************************/
 static int
 is_ancestor
   (const struct sanim_node* node, const struct sanim_node* possible_ancestor)
@@ -39,7 +39,8 @@ is_ancestor
 }
 
 static int
-is_after_pivot(const struct sanim_node* node) {
+is_after_pivot(const struct sanim_node* node)
+{
   ASSERT(node);
   while (node) {
     if (node->data->pivot_data) return 1;
@@ -49,15 +50,17 @@ is_after_pivot(const struct sanim_node* node) {
 }
 
 static void
-d34_muld34(double dst[12], const double a[12], const double b[12]) {
-  ASSERT(dst && a && b);
+d34_muld34(double dst[12], const double a[12], const double b[12])
+{
   double tmp[3];
+  ASSERT(dst && a && b);
   d3_add(dst + 9, d33_muld3(tmp, a, b + 9), a + 9);
   d33_muld33(dst, a, b);
 }
 
-static void
-d34_set_identity(double dst[12]) {
+static INLINE void
+d34_set_identity(double dst[12])
+{
   ASSERT(dst);
   d33_set_identity(dst);
   d3_splat(dst + 9, 0);
@@ -253,7 +256,8 @@ pivot_solve_single_axis_sun
 {
   double mat[12], inv[12];
   double local_in[3];
-  double local_in_2D[2], rotated_n_2D[2];
+  double local_in_2D[2] = {0, 0};
+  double rotated_n_2D[2] = {0, 0};
   const double* ref_normal_2D;
   struct pivot_data* pivot_data;
   ASSERT(node && node->data && in_dir);
@@ -265,7 +269,7 @@ pivot_solve_single_axis_sun
 
   ref_normal_2D = pivot_data->pivot.data.pivot1.ref_normal + 1;
   ASSERT(d2_is_normalized(ref_normal_2D));
-  
+
   /* get in_dir in local space */
   node_get_transform(node, 0, mat);
   d33_transpose(inv, mat); /* no scale factors: inverse is transpose */
@@ -284,14 +288,15 @@ pivot_solve_single_axis_sun
   return RES_OK;
 }
 
-FINLINE res_T
-pivot_solve_single_axis_line
-  (struct sanim_node* node,
-   const double in_dir[3])
+static INLINE res_T
+pivot_solve_single_axis_line(struct sanim_node* node, const double in_dir[3])
 {
   double mat[12], inv[9];
   double local_in[3], local_target[3];
-  double rotated_n_2D[2], local_out_2D[2], local_in_2D[2], ref_point_2D[2];
+  double rotated_n_2D[2] = {0, 0};
+  double local_out_2D[2] = {0, 0};
+  double local_in_2D[2] = {0, 0};
+  double ref_point_2D[2] = {0, 0};
   const double* ref_normal_2D;
   double* const local_target_2D = local_target + 1;
   struct pivot_data* pivot_data;
@@ -377,7 +382,7 @@ pivot_solve_single_axis_line
     if (fabs(previous_angle - angle) > PI) {
       previous_angle = (angle > 0) ? 2 * PI : -2 * PI;
     }
-    
+
     delta = previous_angle - angle;
     if (fabs(delta) < 1e-7 || ++cpt > 10)
       break;
@@ -399,19 +404,21 @@ pivot_solve_single_axis_line
     d22_muld2(ref_point_2D, pivot, pivot_data->pivot.data.pivot1.ref_point + 1);
     /* no d3_add(ref_point, ref_point, pivot + 9) as pivot has no offset to add */
   } while (1);
-  
+
   pivot_data->angleX = angle;
   return RES_OK;
 }
 
-FINLINE res_T
+static INLINE res_T
 pivot_solve_single_axis_dir
   (struct sanim_node* node,
    const double in_dir[3])
 {
   double mat[12], inv[12];
   double local_in[3], local_out[3];
-  double local_in_2D[2], rotated_n_2D[2], local_out_2D[2];
+  double local_in_2D[2] = {0, 0};
+  double rotated_n_2D[2] = {0, 0};
+  double local_out_2D[2] = {0, 0};
   const double* ref_normal_2D;
   struct pivot_data* pivot_data;
   ASSERT(node && node->data && in_dir);
@@ -425,7 +432,7 @@ pivot_solve_single_axis_dir
   ref_normal_2D = pivot_data->pivot.data.pivot1.ref_normal + 1;
   ASSERT(pivot_data->pivot.data.pivot1.ref_normal[0] == 0); /* solve in YZ plane */
   ASSERT(d2_is_normalized(ref_normal_2D));
-  
+
   /* get in_dir and out_dir in local space */
   node_get_transform(node, 0, mat);
   d33_transpose(inv, mat); /* no scale factors: inverse is transpose */
@@ -453,7 +460,7 @@ pivot_solve_single_axis_dir
   return RES_OK;
 }
 
-FINLINE res_T
+static INLINE res_T
 pivot_solve_single_axis
   (struct sanim_node* node,
    const double in_dir[3])
@@ -499,7 +506,7 @@ compute_two_axis_angles
   *angleZ = atan2(-rotated_n[0], rotated_n[1]);
 }
 
-FINLINE res_T
+static INLINE res_T
 pivot_solve_two_axis_sun
   (struct sanim_node* node,
    const double in_dir[3])
@@ -527,7 +534,7 @@ pivot_solve_two_axis_sun
   return RES_OK;
 }
 
-FINLINE res_T
+static INLINE res_T
 pivot_solve_two_axis_point
   (struct sanim_node* node,
    const double in_dir[3])
@@ -647,7 +654,7 @@ pivot_solve_two_axis_point
   return RES_OK;
 }
 
-FINLINE res_T
+static INLINE res_T
 pivot_solve_two_axis_dir
   (struct sanim_node* node,
    const double in_dir[3])
@@ -668,7 +675,7 @@ pivot_solve_two_axis_dir
   d33_transpose(inv, mat); /* no scale factors: inverse is transpose */
   d33_muld3(local_in, inv, in_dir);
   d33_muld3(local_out, inv, pivot_data->tracking.data.out_dir.u);
-  
+
   /* rotated_n = bisectrix of local_in and out_dir */
   d3_sub(rotated_n, local_out, local_in);
   if (d3_normalize(rotated_n, rotated_n) < 1e-4) {
@@ -680,7 +687,7 @@ pivot_solve_two_axis_dir
   return RES_OK;
 }
 
-FINLINE res_T
+static INLINE res_T
 pivot_solve_two_axis
   (struct sanim_node* node,
    const double in_dir[3])
@@ -706,7 +713,7 @@ pivot_solve_two_axis
   return res;
 }
 
-FINLINE res_T
+static INLINE res_T
 copy_and_normalise_pivot_data
   (struct pivot_data* dest,
    const struct sanim_pivot* pivot,
@@ -875,8 +882,8 @@ visit_tree
 }
 
 /*******************************************************************************
-* Exported sanim_node functions
-******************************************************************************/
+ * Exported sanim_node functions
+ ******************************************************************************/
 res_T
 sanim_node_add_child
   (struct sanim_node* father,
@@ -951,7 +958,7 @@ sanim_node_initialize_pivot
     res = RES_MEM_ERR;
     goto error;
   }
-  
+
   res = copy_and_normalise_pivot_data(node->data->pivot_data, pivot, tracking);
   if (res != RES_OK) goto error;
 
@@ -1184,7 +1191,7 @@ sanim_node_get_child
    const size_t idx,
    const struct sanim_node** child)
 {
-  const struct sanim_node* const* children;
+  struct sanim_node* const* children;
   if (!node || !child || !node->data)
     return RES_BAD_ARG;
   if (idx >= darray_children_size_get(&node->data->children))
