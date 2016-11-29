@@ -86,15 +86,16 @@ rcmake_setup_devel(solstice-anim SolAnim ${VERSION} solstice/sanim_version.h)
 ################################################################################
 if(NOT NO_TEST)
   function(new_test _name)
-    add_executable(${_name}
-      ${SANIM_SOURCE_DIR}/test_sanim_utils.h
-      ${SANIM_SOURCE_DIR}/test_sanim_utils.c
-      ${SANIM_SOURCE_DIR}/${_name}.c)
-    target_link_libraries(${_name} solstice-anim RSys)
+    add_executable(${_name} ${SANIM_SOURCE_DIR}/${_name}.c)
+    target_link_libraries(${_name} solstice-anim solstice-anim-test RSys)
     add_test(${_name} ${_name})
     rcmake_set_test_runtime_dirs(${_name} _runtime_dirs)
   endfunction()
-  
+
+  add_library(solstice-anim-test STATIC
+    ${SANIM_SOURCE_DIR}/test_sanim_utils.h
+    ${SANIM_SOURCE_DIR}/test_sanim_utils.c)
+
   new_test(test_sanim_node)
   new_test(test_sanim_node_transform)
   new_test(test_sanim_node_pivot)
