@@ -153,7 +153,7 @@ my_type_get_child
    const size_t idx,
    struct my_type** child)
 {
-  const struct sanim_node* tmp;
+  struct sanim_node* tmp;
   res_T res = RES_OK;
   if (!t || !child) return RES_BAD_ARG;
   res = sanim_node_get_child(&t->node, idx, &tmp);

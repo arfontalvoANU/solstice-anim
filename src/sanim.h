@@ -244,7 +244,7 @@ SANIM_API res_T
 sanim_node_get_child
   (const struct sanim_node* node,
    const size_t idx,
-   const struct sanim_node** child);
+   struct sanim_node** child);
 
 SANIM_API res_T
 sanim_node_is_pivot
