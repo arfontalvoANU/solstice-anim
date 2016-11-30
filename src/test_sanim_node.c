@@ -25,6 +25,7 @@ main(int argc, char** argv)
   struct my_type *t1, *t2, *ptr;
   struct sanim_pivot pivot = SANIM_PIVOT_NULL;
   struct sanim_tracking tracking = SANIM_TRACKING_NULL;
+  struct sanim_node s1 = SANIM_NODE_NULL, s2 = SANIM_NODE_NULL;
   size_t count;
   int p;
   double transform1[12], transform2[12];
@@ -57,7 +58,6 @@ main(int argc, char** argv)
   CHECK(my_type_is_pivot(t1, NULL), RES_BAD_ARG);
   CHECK(my_type_is_pivot(t1, &p), RES_OK);
   CHECK(p, 1);
-
   CHECK(my_type_ref_put(t1), RES_OK);
 
   CHECK(my_type_create(&allocator, &t1), RES_OK);
@@ -136,6 +136,30 @@ main(int argc, char** argv)
   CHECK(my_type_track_me(t1, &tracking), RES_OK);
   CHECK(tracking.policy, TRACKING_NODE_TARGET);
   CHECK(&t1->node, tracking.data.node_target.tracked_node);
+
+  /* Some sanim API tests that cannot be carried out through my_type testing.
+   * Test use of non-initialized sanim nodes. */
+  CHECK(sanim_node_is_initialized(NULL, &p), RES_BAD_ARG);
+  CHECK(sanim_node_is_initialized(&s1, NULL), RES_BAD_ARG);
+  CHECK(sanim_node_is_initialized(&s1, &p), RES_OK);
+  CHECK(p, 0);
+  CHECK(sanim_node_release(&s1), RES_OK); /* safe release of uninitialized nodes */
+  CHECK(sanim_node_initialize(&allocator, NULL), RES_BAD_ARG);
+  CHECK(sanim_node_initialize(&allocator, &s1), RES_OK);
+  CHECK(sanim_node_is_initialized(&s1, &p), RES_OK);
+  CHECK(p, 1);
+  CHECK(sanim_node_release(&s1), RES_OK);
+  CHECK(sanim_node_is_initialized(&s2, &p), RES_OK);
+  CHECK(p, 0);
+  CHECK(sanim_node_initialize_pivot(&allocator, NULL, &tracking, &s2), RES_BAD_ARG);
+  CHECK(sanim_node_initialize_pivot(&allocator, &pivot, NULL, &s2), RES_BAD_ARG);
+  CHECK(sanim_node_initialize_pivot(&allocator, &pivot, &tracking, NULL), RES_BAD_ARG);
+  CHECK(sanim_node_initialize_pivot(&allocator, &pivot, &tracking, &s2), RES_OK);
+  CHECK(sanim_node_is_initialized(&s2, &p), RES_OK);
+  CHECK(p, 1);
+  CHECK(sanim_node_release(NULL), RES_BAD_ARG);
+  CHECK(sanim_node_release(&s2), RES_OK);
+  CHECK(sanim_node_release(&s2), RES_OK); /* safe mumtiple release */
 
   /* release memory */
   CHECK(my_type_ref_put(t1), RES_OK);
