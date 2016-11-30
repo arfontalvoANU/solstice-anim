@@ -54,7 +54,7 @@ struct sanim_node {
 static const struct sanim_node SANIM_NODE_NULL = SANIM_NODE_NULL__;
 
 /* types to describe pivots */
-enum pivot_type {
+enum sanim_pivot_type {
   PIVOT_SINGLE_AXIS,
   PIVOT_TWO_AXIS,
 
@@ -79,7 +79,7 @@ struct sanim_pivot_2 {
 static const struct sanim_pivot_2 SANIM_PIVOT2_DEFAULT = SANIM_PIVOT2_DEFAULT__;
 
 struct sanim_pivot {
-  enum pivot_type type;
+  enum sanim_pivot_type type;
   union {
     struct sanim_pivot_1 pivot1;
     struct sanim_pivot_2 pivot2;
@@ -89,7 +89,7 @@ struct sanim_pivot {
 static const struct sanim_pivot SANIM_PIVOT_NULL = SANIM_PIVOT_NULL__;
 
 /* types to describe tracking policies */
-enum tracking_policy {
+enum sanim_tracking_policy {
   TRACKING_SUN, /* orient the device to face the sun */
   TRACKING_POINT, /* direct the output flux towards a point */
   TRACKING_NODE_TARGET, /* direct the output flux towards a ponctual animated target */
@@ -124,7 +124,7 @@ static const struct sanim_policy_out_dir SANIM_OUT_DIR_POLICY_DEFAULT =
 
 
 struct sanim_tracking {
-  enum tracking_policy policy;
+  enum sanim_tracking_policy policy;
   union {
     struct sanim_policy_point point;
     struct sanim_policy_node_target node_target;
