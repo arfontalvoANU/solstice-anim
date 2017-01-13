@@ -165,7 +165,8 @@ compose_pivot_transform_L(const struct pivot_data* pivot, double accum[12]) {
 }
 
 static double*
-get_pivot_transform(const struct pivot_data* pivot, double transform[12]) {
+get_pivot_transform(const struct pivot_data* pivot, double transform[12]) 
+{
   ASSERT(pivot && transform);
   switch (pivot->pivot.type) {
   case PIVOT_SINGLE_AXIS: {
@@ -835,7 +836,8 @@ compose_pivot_transform_R(double accum[12], const struct pivot_data* pivot) {
 }
 
 static double*
-compose_node_transform_R(double accum[12], const struct sanim_node* node) {
+compose_node_transform_R(double accum[12], const struct sanim_node* node)
+{
   double local[12];
   ASSERT(node && node->data && accum);
   d33_rotation(local, SPLIT3(node->data->rotations));
@@ -854,10 +856,11 @@ visit_tree
    void* data,
    res_T(*visitor)(
      const struct sanim_node* n, const double transform[12], void* data),
-   double transform[12])
+   const double affine_transform[12])
 {
   size_t count, i;
   struct sanim_node* const* children;
+  double transform[12];
   res_T res = RES_OK;
   ASSERT(node && node->data && in_dir && visitor);
   ASSERT(d3_is_normalized(in_dir));
@@ -867,6 +870,8 @@ visit_tree
     if (res != RES_OK) return res;
   }
 
+  d33_set(transform, affine_transform);
+  d3_set(transform+9, affine_transform+9);
   compose_node_transform_R(transform, node);
   res = visitor(node, transform, data);
   if (res != RES_OK) return res;
