@@ -170,14 +170,14 @@ sanim_node_solve_pivot
   (struct sanim_node* node,
    const double in_dir[3]);
 
-/* Visit the (sub)tree starting at node
- * Solve pivots if any (an ancestor pivot would not be solved/updated)
- * Call visitor on every node of the tree with its updated transform
- * Visit stops if a call to visitor return is not RES_OK */
+/* Visit the (sub)tree starting at `node'. Solve pivots if any (an ancestor
+ * pivot would not be solved/updated) and if `in_dir' is not NULL. Call
+ * `visitor' on every node of the tree with its updated transform Visit stops
+ * if a call to visitor return is not RES_OK */
 SANIM_API res_T
 sanim_node_visit_tree
   (struct sanim_node* node,
-   const double in_dir[3],
+   const double in_dir[3], /* May be NULL <=> do not solve pivot */
    void* data,
    res_T (*visitor)
     (const struct sanim_node* n, const double transform[12], void* data));

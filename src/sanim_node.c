@@ -165,7 +165,7 @@ compose_pivot_transform_L(const struct pivot_data* pivot, double accum[12]) {
 }
 
 static double*
-get_pivot_transform(const struct pivot_data* pivot, double transform[12]) 
+get_pivot_transform(const struct pivot_data* pivot, double transform[12])
 {
   ASSERT(pivot && transform);
   switch (pivot->pivot.type) {
@@ -862,10 +862,10 @@ visit_tree
   struct sanim_node* const* children;
   double transform[12];
   res_T res = RES_OK;
-  ASSERT(node && node->data && in_dir && visitor);
-  ASSERT(d3_is_normalized(in_dir));
+  ASSERT(node && node->data && visitor);
+  ASSERT(!in_dir || d3_is_normalized(in_dir));
 
-  if (node->data->pivot_data) {
+  if (in_dir && node->data->pivot_data) {
     res = node_solve_pivot(node, in_dir);
     if (res != RES_OK) return res;
   }
@@ -1035,19 +1035,19 @@ sanim_node_visit_tree
   (struct sanim_node* node,
    const double in_dir[3],
    void* data,
-   res_T(*visitor)(
-     const struct sanim_node* n, const double transform[12], void* data))
+   res_T(*visitor)
+    (const struct sanim_node* n, const double transform[12], void* data))
 {
   double dir[3];
   double transform[12];
   size_t count, i;
   struct sanim_node* const* children;
   res_T res = RES_OK;
-  if (!node || !node->data || !in_dir || !visitor) return RES_BAD_ARG;
-  if (!d3_normalize(dir, in_dir)) return RES_BAD_ARG;
+  if (!node || !node->data || !visitor) return RES_BAD_ARG;
+  if (in_dir && !d3_normalize(dir, in_dir)) return RES_BAD_ARG;
 
-  if (node->data->pivot_data) {
-    res = node_solve_pivot(node, in_dir);
+  if (in_dir && node->data->pivot_data) {
+    res = node_solve_pivot(node, dir);
     if (res != RES_OK) return res;
   }
 
@@ -1060,7 +1060,7 @@ sanim_node_visit_tree
   children = darray_children_data_get(&node->data->children);
   for (i = 0; i < count; i++) {
     struct sanim_node* child = children[i];
-    res = visit_tree(child, dir, data, visitor, transform);
+    res = visit_tree(child, in_dir ? dir : NULL, data, visitor, transform);
     if (res != RES_OK) return res;
   }
   return RES_OK;
