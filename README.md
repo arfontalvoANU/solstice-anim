@@ -21,11 +21,19 @@ well as all the aforementioned prerequisites. Finally generate the project from
 the `cmake/CMakeLists.txt` file by appending to the `CMAKE_PREFIX_PATH`
 variable the install directories of its dependencies.
 
+## Release notes
+
+### Version 0.2
+
+- Update the `sanim_node_visit_tree` function: the submitted sun direction may
+  be NULL. In this case, the pivot constraints are not resolved during the tree
+  traversal.
+
 ## Licenses
 
 Solstice-Anim is developed by [|Meso|Star>](http://www.meso-star.com) for the
 [National Center for Scientific Research](http://www.cnrs.fr/index.php) (CNRS).
-It is a free software copyright (C) CNRS 2016 and it is released under the
+It is a free software copyright (C) CNRS 2016-2017 and it is released under the
 [OSI](http://opensource.org)-approved GPL v3+ license. You are welcome to
 redistribute it under certain conditions; refer to the COPYING file for
 details.
