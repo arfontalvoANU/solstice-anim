@@ -38,135 +38,135 @@ main(int argc, char** argv)
 
   mem_init_proxy_allocator(&allocator, &mem_default_allocator);
 
-  CHECK(my_type_create(NULL, &t1), RES_OK);
-  CHECK(my_type_ref_put(NULL), RES_BAD_ARG);
-  CHECK(my_type_ref_get(NULL), RES_BAD_ARG);
-  CHECK(my_type_ref_get(t1), RES_OK);
-  CHECK(my_type_ref_put(t1), RES_OK);
-  CHECK(my_type_ref_put(t1), RES_OK);
-  CHECK(my_type_create(&allocator, &t1), RES_OK);
-  CHECK(my_type_create(&allocator, NULL), RES_BAD_ARG);
-  CHECK(my_type_create(&allocator, &t2), RES_OK);
-  CHECK(my_type_ref_put(t1), RES_OK);
+  CHK(my_type_create(NULL, &t1) == RES_OK);
+  CHK(my_type_ref_put(NULL) == RES_BAD_ARG);
+  CHK(my_type_ref_get(NULL) == RES_BAD_ARG);
+  CHK(my_type_ref_get(t1) == RES_OK);
+  CHK(my_type_ref_put(t1) == RES_OK);
+  CHK(my_type_ref_put(t1) == RES_OK);
+  CHK(my_type_create(&allocator, &t1) == RES_OK);
+  CHK(my_type_create(&allocator, NULL) == RES_BAD_ARG);
+  CHK(my_type_create(&allocator, &t2) == RES_OK);
+  CHK(my_type_ref_put(t1) == RES_OK);
 
-  CHECK(my_type_pivot_create(&allocator, NULL, &tracking, &t1), RES_BAD_ARG);
-  CHECK(my_type_pivot_create(&allocator, &pivot, NULL, &t1), RES_BAD_ARG);
-  CHECK(my_type_pivot_create(&allocator, &pivot, &tracking, NULL), RES_BAD_ARG);
-  CHECK(my_type_pivot_create(&allocator, &pivot, &tracking, &t1), RES_OK);
+  CHK(my_type_pivot_create(&allocator, NULL, &tracking, &t1) == RES_BAD_ARG);
+  CHK(my_type_pivot_create(&allocator, &pivot, NULL, &t1) == RES_BAD_ARG);
+  CHK(my_type_pivot_create(&allocator, &pivot, &tracking, NULL) == RES_BAD_ARG);
+  CHK(my_type_pivot_create(&allocator, &pivot, &tracking, &t1) == RES_OK);
 
-  CHECK(my_type_is_pivot(NULL, &p), RES_BAD_ARG);
-  CHECK(my_type_is_pivot(t1, NULL), RES_BAD_ARG);
-  CHECK(my_type_is_pivot(t1, &p), RES_OK);
-  CHECK(p, 1);
-  CHECK(my_type_ref_put(t1), RES_OK);
+  CHK(my_type_is_pivot(NULL, &p) == RES_BAD_ARG);
+  CHK(my_type_is_pivot(t1, NULL) == RES_BAD_ARG);
+  CHK(my_type_is_pivot(t1, &p) == RES_OK);
+  CHK(p == 1);
+  CHK(my_type_ref_put(t1) == RES_OK);
 
-  CHECK(my_type_create(&allocator, &t1), RES_OK);
+  CHK(my_type_create(&allocator, &t1) == RES_OK);
 
-  CHECK(my_type_is_pivot(t1, &p), RES_OK);
-  CHECK(p, 0);
+  CHK(my_type_is_pivot(t1, &p) == RES_OK);
+  CHK(p == 0);
 
-  CHECK(my_type_add_child(NULL, t1), RES_BAD_ARG);
-  CHECK(my_type_add_child(t1, NULL), RES_BAD_ARG);
-  CHECK(my_type_add_child(t1, t1), RES_BAD_ARG);
-  CHECK(my_type_add_child(t1, t2), RES_OK);
-  CHECK(my_type_add_child(t1, t2), RES_BAD_ARG);
-  CHECK(my_type_add_child(t2, t1), RES_BAD_ARG);
+  CHK(my_type_add_child(NULL, t1) == RES_BAD_ARG);
+  CHK(my_type_add_child(t1, NULL) == RES_BAD_ARG);
+  CHK(my_type_add_child(t1, t1) == RES_BAD_ARG);
+  CHK(my_type_add_child(t1, t2) == RES_OK);
+  CHK(my_type_add_child(t1, t2) == RES_BAD_ARG);
+  CHK(my_type_add_child(t2, t1) == RES_BAD_ARG);
 
-  CHECK(my_type_copy_create(NULL, &ptr), RES_BAD_ARG);
-  CHECK(my_type_copy_create(t1, NULL), RES_BAD_ARG);
+  CHK(my_type_copy_create(NULL, &ptr) == RES_BAD_ARG);
+  CHK(my_type_copy_create(t1, NULL) == RES_BAD_ARG);
 
-  CHECK(my_type_get_father(t1, NULL), RES_BAD_ARG);
-  CHECK(my_type_get_father(NULL, &ptr), RES_BAD_ARG);
-  CHECK(my_type_get_children_count(t1, NULL), RES_BAD_ARG);
-  CHECK(my_type_get_children_count(NULL, &count), RES_BAD_ARG);
-  CHECK(my_type_get_children_count(t1, &count), RES_OK);
-  CHECK(count, 1);
-  CHECK(my_type_get_child(NULL, 0, &ptr), RES_BAD_ARG);
-  CHECK(my_type_get_child(t1, 10, &ptr), RES_BAD_ARG);
-  CHECK(my_type_get_child(t1, 0, NULL), RES_BAD_ARG);
-  CHECK(my_type_get_child(t1, 0, &ptr), RES_OK);
-  CHECK(ptr, t2);
-  CHECK(my_type_get_father(t1, NULL), RES_BAD_ARG);
-  CHECK(my_type_get_father(NULL, &ptr), RES_BAD_ARG);
-  CHECK(my_type_get_father(t1, &ptr), RES_OK);
-  CHECK(ptr, NULL);
-  CHECK(my_type_get_father(t2, &ptr), RES_OK);
-  CHECK(ptr, t1);
+  CHK(my_type_get_father(t1, NULL) == RES_BAD_ARG);
+  CHK(my_type_get_father(NULL, &ptr) == RES_BAD_ARG);
+  CHK(my_type_get_children_count(t1, NULL) == RES_BAD_ARG);
+  CHK(my_type_get_children_count(NULL, &count) == RES_BAD_ARG);
+  CHK(my_type_get_children_count(t1, &count) == RES_OK);
+  CHK(count == 1);
+  CHK(my_type_get_child(NULL, 0, &ptr) == RES_BAD_ARG);
+  CHK(my_type_get_child(t1, 10, &ptr) == RES_BAD_ARG);
+  CHK(my_type_get_child(t1, 0, NULL) == RES_BAD_ARG);
+  CHK(my_type_get_child(t1, 0, &ptr) == RES_OK);
+  CHK(ptr == t2);
+  CHK(my_type_get_father(t1, NULL) == RES_BAD_ARG);
+  CHK(my_type_get_father(NULL, &ptr) == RES_BAD_ARG);
+  CHK(my_type_get_father(t1, &ptr) == RES_OK);
+  CHK(ptr == NULL);
+  CHK(my_type_get_father(t2, &ptr) == RES_OK);
+  CHK(ptr == t1);
 
-  CHECK(my_type_set_translation(NULL, transl), RES_BAD_ARG);
-  CHECK(my_type_set_translation(t1, NULL), RES_BAD_ARG);
-  CHECK(my_type_set_translation(t1, transl), RES_OK);
+  CHK(my_type_set_translation(NULL, transl) == RES_BAD_ARG);
+  CHK(my_type_set_translation(t1, NULL) == RES_BAD_ARG);
+  CHK(my_type_set_translation(t1, transl) == RES_OK);
 
-  CHECK(my_type_get_translation(NULL, transl_), RES_BAD_ARG);
-  CHECK(my_type_get_translation(t1, NULL), RES_BAD_ARG);
-  CHECK(my_type_get_translation(t1, transl_), RES_OK);
-  CHECK(d3_eq(transl, transl_), 1);
+  CHK(my_type_get_translation(NULL, transl_) == RES_BAD_ARG);
+  CHK(my_type_get_translation(t1, NULL) == RES_BAD_ARG);
+  CHK(my_type_get_translation(t1, transl_) == RES_OK);
+  CHK(d3_eq(transl, transl_) == 1);
 
-  CHECK(my_type_set_rotations(NULL, rot), RES_BAD_ARG);
-  CHECK(my_type_set_rotations(t1, NULL), RES_BAD_ARG);
-  CHECK(my_type_set_rotations(t1, rot), RES_OK);
+  CHK(my_type_set_rotations(NULL, rot) == RES_BAD_ARG);
+  CHK(my_type_set_rotations(t1, NULL) == RES_BAD_ARG);
+  CHK(my_type_set_rotations(t1, rot) == RES_OK);
 
-  CHECK(my_type_get_rotations(NULL, rot_), RES_BAD_ARG);
-  CHECK(my_type_get_rotations(t1, NULL), RES_BAD_ARG);
-  CHECK(my_type_get_rotations(t1, rot_), RES_OK);
-  CHECK(d3_eq(rot, rot_), 1);
+  CHK(my_type_get_rotations(NULL, rot_) == RES_BAD_ARG);
+  CHK(my_type_get_rotations(t1, NULL) == RES_BAD_ARG);
+  CHK(my_type_get_rotations(t1, rot_) == RES_OK);
+  CHK(d3_eq(rot, rot_) == 1);
 
-  CHECK(my_type_get_transform(NULL, transform1), RES_BAD_ARG);
-  CHECK(my_type_get_transform(t1, NULL), RES_BAD_ARG);
-  CHECK(my_type_get_transform(t1, transform1), RES_OK);
+  CHK(my_type_get_transform(NULL, transform1) == RES_BAD_ARG);
+  CHK(my_type_get_transform(t1, NULL) == RES_BAD_ARG);
+  CHK(my_type_get_transform(t1, transform1) == RES_OK);
 
-  CHECK(my_type_copy_create(NULL, &ptr), RES_BAD_ARG);
-  CHECK(my_type_copy_create(t1, NULL), RES_BAD_ARG);
+  CHK(my_type_copy_create(NULL, &ptr) == RES_BAD_ARG);
+  CHK(my_type_copy_create(t1, NULL) == RES_BAD_ARG);
   /*t1->my_data = 1;*/
-  CHECK(my_type_copy_create(t1, &ptr), RES_OK);
-  CHECK(t1->my_data, ptr->my_data);
-  CHECK(my_type_get_transform(ptr, transform2), RES_OK);
-  CHECK(d34_eq_eps(transform1, transform2, 0), 1);
-  CHECK(my_type_ref_put(ptr), RES_OK);
+  CHK(my_type_copy_create(t1, &ptr) == RES_OK);
+  CHK(t1->my_data == ptr->my_data);
+  CHK(my_type_get_transform(ptr, transform2) == RES_OK);
+  CHK(d34_eq_eps(transform1, transform2, 0) == 1);
+  CHK(my_type_ref_put(ptr) == RES_OK);
 
-  CHECK(my_type_recursive_copy(&allocator, NULL, &ptr), RES_BAD_ARG);
-  CHECK(my_type_recursive_copy(&allocator, t1, NULL), RES_BAD_ARG);
-  CHECK(my_type_recursive_copy(&allocator, t1, &t1), RES_BAD_ARG);
-  CHECK(my_type_recursive_copy(&allocator, t1, &ptr), RES_OK);
+  CHK(my_type_recursive_copy(&allocator, NULL, &ptr) == RES_BAD_ARG);
+  CHK(my_type_recursive_copy(&allocator, t1, NULL) == RES_BAD_ARG);
+  CHK(my_type_recursive_copy(&allocator, t1, &t1) == RES_BAD_ARG);
+  CHK(my_type_recursive_copy(&allocator, t1, &ptr) == RES_OK);
 
   tracking.policy = TRACKING_POINT;
   tracking.data.node_target.tracked_node = NULL;
-  CHECK(my_type_track_me(NULL, &tracking), RES_BAD_ARG);
-  CHECK(my_type_track_me(t1, NULL), RES_BAD_ARG);
-  CHECK(my_type_track_me(t1, &tracking), RES_OK);
-  CHECK(tracking.policy, TRACKING_NODE_TARGET);
-  CHECK(&t1->node, tracking.data.node_target.tracked_node);
+  CHK(my_type_track_me(NULL, &tracking) == RES_BAD_ARG);
+  CHK(my_type_track_me(t1, NULL) == RES_BAD_ARG);
+  CHK(my_type_track_me(t1, &tracking) == RES_OK);
+  CHK(tracking.policy == TRACKING_NODE_TARGET);
+  CHK(&t1->node == tracking.data.node_target.tracked_node);
 
   /* Some sanim API tests that cannot be carried out through my_type testing.
    * Test use of non-initialized sanim nodes. */
-  CHECK(sanim_node_is_initialized(NULL, &p), RES_BAD_ARG);
-  CHECK(sanim_node_is_initialized(&s1, NULL), RES_BAD_ARG);
-  CHECK(sanim_node_is_initialized(&s1, &p), RES_OK);
-  CHECK(p, 0);
-  CHECK(sanim_node_release(&s1), RES_OK); /* safe release of uninitialized nodes */
-  CHECK(sanim_node_initialize(&allocator, NULL), RES_BAD_ARG);
-  CHECK(sanim_node_initialize(&allocator, &s1), RES_OK);
-  CHECK(sanim_node_is_initialized(&s1, &p), RES_OK);
-  CHECK(p, 1);
-  CHECK(sanim_node_release(&s1), RES_OK);
-  CHECK(sanim_node_is_initialized(&s2, &p), RES_OK);
-  CHECK(p, 0);
-  CHECK(sanim_node_initialize_pivot(&allocator, NULL, &tracking, &s2), RES_BAD_ARG);
-  CHECK(sanim_node_initialize_pivot(&allocator, &pivot, NULL, &s2), RES_BAD_ARG);
-  CHECK(sanim_node_initialize_pivot(&allocator, &pivot, &tracking, NULL), RES_BAD_ARG);
-  CHECK(sanim_node_initialize_pivot(&allocator, &pivot, &tracking, &s2), RES_OK);
-  CHECK(sanim_node_is_initialized(&s2, &p), RES_OK);
-  CHECK(p, 1);
-  CHECK(sanim_node_release(NULL), RES_BAD_ARG);
-  CHECK(sanim_node_release(&s2), RES_OK);
-  CHECK(sanim_node_release(&s2), RES_OK); /* safe mumtiple release */
+  CHK(sanim_node_is_initialized(NULL, &p) == RES_BAD_ARG);
+  CHK(sanim_node_is_initialized(&s1, NULL) == RES_BAD_ARG);
+  CHK(sanim_node_is_initialized(&s1, &p) == RES_OK);
+  CHK(p == 0);
+  CHK(sanim_node_release(&s1) == RES_OK); /* safe release of uninitialized nodes */
+  CHK(sanim_node_initialize(&allocator, NULL) == RES_BAD_ARG);
+  CHK(sanim_node_initialize(&allocator, &s1) == RES_OK);
+  CHK(sanim_node_is_initialized(&s1, &p) == RES_OK);
+  CHK(p == 1);
+  CHK(sanim_node_release(&s1) == RES_OK);
+  CHK(sanim_node_is_initialized(&s2, &p) == RES_OK);
+  CHK(p == 0);
+  CHK(sanim_node_initialize_pivot(&allocator, NULL, &tracking, &s2) == RES_BAD_ARG);
+  CHK(sanim_node_initialize_pivot(&allocator, &pivot, NULL, &s2) == RES_BAD_ARG);
+  CHK(sanim_node_initialize_pivot(&allocator, &pivot, &tracking, NULL) == RES_BAD_ARG);
+  CHK(sanim_node_initialize_pivot(&allocator, &pivot, &tracking, &s2) == RES_OK);
+  CHK(sanim_node_is_initialized(&s2, &p) == RES_OK);
+  CHK(p == 1);
+  CHK(sanim_node_release(NULL) == RES_BAD_ARG);
+  CHK(sanim_node_release(&s2) == RES_OK);
+  CHK(sanim_node_release(&s2) == RES_OK); /* safe mumtiple release */
 
   /* release memory */
-  CHECK(my_type_ref_put(t1), RES_OK);
-  CHECK(my_type_ref_put(t2), RES_OK);
-  CHECK(my_type_ref_put(ptr), RES_OK);
+  CHK(my_type_ref_put(t1) == RES_OK);
+  CHK(my_type_ref_put(t2) == RES_OK);
+  CHK(my_type_ref_put(ptr) == RES_OK);
   check_memory_allocator(&allocator);
   mem_shutdown_proxy_allocator(&allocator);
-  CHECK(mem_allocated_size(), 0);
+  CHK(mem_allocated_size() == 0);
   return 0;
 }

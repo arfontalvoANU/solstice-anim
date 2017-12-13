@@ -178,11 +178,11 @@ my_type_recursive_copy_
   if (res != RES_OK) goto error;
   darray_tmp_push_back(tmp, &root);
   if (res != RES_OK) goto error;
-  CHECK(my_type_get_children_count(src, &sz), RES_OK);
+  CHK(my_type_get_children_count(src, &sz) == RES_OK);
   for (i = 0; i < sz; i++) {
     struct my_type* child;
     struct my_type* node;
-    CHECK(my_type_get_child(src, i, &child), RES_OK);
+    CHK(my_type_get_child(src, i, &child) == RES_OK);
     res = my_type_recursive_copy_(alloc, child, tmp, &node);
     if (res != RES_OK) goto error;
     my_type_add_child(root, node);
@@ -236,10 +236,10 @@ my_type_release(ref_T* ref)
   size_t i, sz;
   struct my_type* t = CONTAINER_OF(ref, struct my_type, ref);
   if (t->node.data) {
-    CHECK(my_type_get_children_count(t, &sz), RES_OK);
+    CHK(my_type_get_children_count(t, &sz) == RES_OK);
     for (i = 0; i < sz; i++) {
       struct my_type* node;
-      CHECK(my_type_get_child(t, i, &node), RES_OK);
+      CHK(my_type_get_child(t, i, &node) == RES_OK);
       my_type_ref_put(node);
     }
   }

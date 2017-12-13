@@ -58,32 +58,32 @@ main(int argc, char** argv)
   d3(pivot.data.pivot1.ref_normal, 0, 0, 1);
 
   /* ref_normal not in the YZ plane */
-  CHECK(my_type_create(&allocator, &t1), RES_OK);
-  CHECK(my_type_pivot_create(&allocator, &pivot, &tracking, &t2), RES_OK);
-  CHECK(my_type_create(&allocator, &t3), RES_OK);
+  CHK(my_type_create(&allocator, &t1) == RES_OK);
+  CHK(my_type_pivot_create(&allocator, &pivot, &tracking, &t2) == RES_OK);
+  CHK(my_type_create(&allocator, &t3) == RES_OK);
 
-  CHECK(my_type_add_child(t1, t2), RES_OK);
-  CHECK(my_type_add_child(t2, t3), RES_OK);
-
-  data.result = NULL;
-
-  CHECK(sanim_node_search_tree(NULL, &data, search, &found), RES_BAD_ARG);
-  CHECK(sanim_node_search_tree(&t1->node, NULL, search, &found), RES_BAD_ARG);
-  CHECK(sanim_node_search_tree(&t1->node, &data, NULL, &found), RES_BAD_ARG);
-  CHECK(sanim_node_search_tree(&t1->node, &data, search, NULL), RES_BAD_ARG);
-  CHECK(sanim_node_search_tree(&t1->node, &data, search, &found), RES_OK);
-  CHECK(data.result, t2);
+  CHK(my_type_add_child(t1, t2) == RES_OK);
+  CHK(my_type_add_child(t2, t3) == RES_OK);
 
   data.result = NULL;
-  CHECK(sanim_node_search_tree(&t3->node, &data, search, &found), RES_OK);
-  CHECK(data.result, NULL);
+
+  CHK(sanim_node_search_tree(NULL, &data, search, &found) == RES_BAD_ARG);
+  CHK(sanim_node_search_tree(&t1->node, NULL, search, &found) == RES_BAD_ARG);
+  CHK(sanim_node_search_tree(&t1->node, &data, NULL, &found) == RES_BAD_ARG);
+  CHK(sanim_node_search_tree(&t1->node, &data, search, NULL) == RES_BAD_ARG);
+  CHK(sanim_node_search_tree(&t1->node, &data, search, &found) == RES_OK);
+  CHK(data.result == t2);
+
+  data.result = NULL;
+  CHK(sanim_node_search_tree(&t3->node, &data, search, &found) == RES_OK);
+  CHK(data.result == NULL);
   
   /* release memory */
-  CHECK(my_type_ref_put(t1), RES_OK);
-  CHECK(my_type_ref_put(t2), RES_OK);
-  CHECK(my_type_ref_put(t3), RES_OK);
+  CHK(my_type_ref_put(t1) == RES_OK);
+  CHK(my_type_ref_put(t2) == RES_OK);
+  CHK(my_type_ref_put(t3) == RES_OK);
   check_memory_allocator(&allocator);
   mem_shutdown_proxy_allocator(&allocator);
-  CHECK(mem_allocated_size(), 0);
+  CHK(mem_allocated_size() == 0);
   return 0;
 }
