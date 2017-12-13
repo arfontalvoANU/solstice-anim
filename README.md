@@ -1,7 +1,7 @@
 # Solstice Animation
 
-The purpose of this library is to compute the positioning of the constituents 
-of a solar facility. It has been developed in the scope of the Solstice project, 
+The purpose of this library is to compute the positioning of the constituents
+of a solar facility. It has been developed in the scope of the Solstice project,
 in collaboration with the
 [Laboratory of Excellence Solstice](http://www.labex-solstice.fr) and the
 [PROMES](http://www.promes.cnrs.fr/index.php?page=home-en) laboratory of the
@@ -22,6 +22,11 @@ the `cmake/CMakeLists.txt` file by appending to the `CMAKE_PREFIX_PATH`
 variable the install directories of its dependencies.
 
 ## Release notes
+
+### Version 0.2.1
+
+- Update the version of the RSys dependency to 0.6: replace the deprecated
+  `[N]CHECK` macros by the new macro `CHK`.
 
 ### Version 0.2
 
