@@ -23,6 +23,10 @@ variable the install directories of its dependencies.
 
 ## Release notes
 
+### Version 0.2.2
+
+- Fix a compilation issue that prevented building tests.
+
 ### Version 0.2.1
 
 - Update the version of the RSys dependency to 0.6: replace the deprecated
