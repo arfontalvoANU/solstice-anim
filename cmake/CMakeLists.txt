@@ -41,7 +41,7 @@ rcmake_append_runtime_dirs(_runtime_dirs RSys)
 ################################################################################
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 2)
-set(VERSION_PATCH 1)
+set(VERSION_PATCH 2)
 set(VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 set(SANIM_FILES_SRC
@@ -87,7 +87,7 @@ rcmake_setup_devel(solstice-anim SolAnim ${VERSION} solstice/sanim_version.h)
 if(NOT NO_TEST)
   function(new_test _name)
     add_executable(${_name} ${SANIM_SOURCE_DIR}/${_name}.c)
-    target_link_libraries(${_name} solstice-anim solstice-anim-test RSys)
+    target_link_libraries(${_name} solstice-anim-test solstice-anim RSys)
     add_test(${_name} ${_name})
     rcmake_set_test_runtime_dirs(${_name} _runtime_dirs)
   endfunction()
