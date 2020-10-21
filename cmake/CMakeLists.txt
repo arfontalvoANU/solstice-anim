@@ -23,8 +23,8 @@ option(NO_TEST "Do not build tests" OFF)
 ################################################################################
 # Check dependencies
 ################################################################################
-find_package(RCMake 0.2.3 REQUIRED)
-find_package(RSys 0.6 REQUIRED)
+find_package(RCMake 0.4 REQUIRED)
+find_package(RSys 0.10 REQUIRED)
 find_package(OpenMP 1.2 REQUIRED)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${RCMAKE_SOURCE_DIR})
