@@ -66,17 +66,6 @@ d34_set_identity(double dst[12])
   d3_splat(dst + 9, 0);
 }
 
-static INLINE double*
-d22_rotation(double dst[4], const double angle/* in radian */)
-{
-  const double c = (double) cos((double) angle);
-  const double s = (double) sin((double) angle);
-  ASSERT(dst);
-  dst[0] = c; dst[1] = s;
-  dst[2] = -s; dst[3] = c;
-  return dst;
-}
-
 static double*
 get_Xpivot_transform
   (const double angle,

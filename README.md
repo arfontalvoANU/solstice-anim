@@ -23,6 +23,11 @@ variable the install directories of its dependencies.
 
 ## Release notes
 
+### Version 0.2.3
+
+- Remove code that is now part of rsys and upgrade to rsys 0.10.
+  This prevented building using rsys >= 0.8.
+
 ### Version 0.2.2
 
 - Fix a compilation issue that prevented building tests.
