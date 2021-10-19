@@ -30,23 +30,23 @@ obsolete.
 
 ### Version 0.2.3
 
-- Remove code that is now part of rsys and upgrade to rsys 0.10.
-  This prevented building using rsys >= 0.8.
+Remove code that is now part of rsys and upgrade to rsys 0.10.  This prevented
+building using rsys >= 0.8.
 
 ### Version 0.2.2
 
-- Fix a compilation issue that prevented building tests.
+Fix a compilation issue that prevented building tests.
 
 ### Version 0.2.1
 
-- Update the version of the RSys dependency to 0.6: replace the deprecated
-  `[N]CHECK` macros by the new macro `CHK`.
+Update the version of the RSys dependency to 0.6: replace the deprecated
+`[N]CHECK` macros by the new macro `CHK`.
 
 ### Version 0.2
 
-- Update the `sanim_node_visit_tree` function: the submitted sun direction may
-  be NULL. In this case, the pivot constraints are not resolved during the tree
-  traversal.
+Update the `sanim_node_visit_tree` function: the submitted sun direction may be
+NULL. In this case, the pivot constraints are not resolved during the tree
+traversal.
 
 ## Licenses
 
