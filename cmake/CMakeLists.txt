@@ -1,4 +1,5 @@
-# Copyright (C) CNRS 2016-2017
+# Copyright (C) 2018, 2020, 2021 |Méso|Star> (contact@meso-star.com)
+# Copyright (C) 2016, 2017 CNRS
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
 project(solstice-anim C)
 enable_testing()
 
@@ -41,7 +42,7 @@ rcmake_append_runtime_dirs(_runtime_dirs RSys)
 ################################################################################
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 2)
-set(VERSION_PATCH 3)
+set(VERSION_PATCH 4)
 set(VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 set(SANIM_FILES_SRC
