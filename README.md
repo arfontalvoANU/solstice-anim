@@ -23,6 +23,11 @@ variable the install directories of its dependencies.
 
 ## Release notes
 
+### Version 0.2.4
+
+Sets the CMake minimum version to 3.1: since CMake 3.20, version 2.8 has become
+obsolete.
+
 ### Version 0.2.3
 
 - Remove code that is now part of rsys and upgrade to rsys 0.10.
