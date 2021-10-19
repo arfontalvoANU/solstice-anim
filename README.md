@@ -48,12 +48,11 @@ Update the `sanim_node_visit_tree` function: the submitted sun direction may be
 NULL. In this case, the pivot constraints are not resolved during the tree
 traversal.
 
-## Licenses
+## License
 
-Solstice-Anim is developed by [|Meso|Star>](http://www.meso-star.com) for the
-[National Center for Scientific Research](http://www.cnrs.fr/index.php) (CNRS).
-It is a free software copyright (C) CNRS 2016-2017 and it is released under the
-[OSI](http://opensource.org)-approved GPL v3+ license. You are welcome to
-redistribute it under certain conditions; refer to the COPYING file for
-details.
+Copyright (C) 2018, 2020, 2021 |Meso|Star> (<contact@meso-star.com>).  
+Copyright (C) 2016, 2017 CNRS.
 
+Solstice Animation is free software released under the GPL v3+ license: GNU GPL
+version 3 or later. You are welcome to redistribute it under certain
+conditions; refer to the COPYING file for details.

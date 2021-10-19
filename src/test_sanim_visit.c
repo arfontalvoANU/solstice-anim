@@ -1,4 +1,5 @@
-/* Copyright (C) CNRS 2016-2017
+/* Copyright (C) 2018, 2020, 2021 |Méso|Star> (contact@meso-star.com)
+ * Copyright (C) 2016, 2017 CNRS
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
