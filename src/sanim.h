@@ -94,6 +94,7 @@ enum sanim_tracking_policy {
   TRACKING_POINT, /* direct the output flux towards a point */
   TRACKING_NODE_TARGET, /* direct the output flux towards a ponctual animated target */
   TRACKING_OUT_DIR, /* direct the output flux towards a given dir */
+  TRACKING_TARGET_ALIGNED, /* direct target-aligned heliostat the output flux towards a ponctual animated target */
 
   TRACKING_POLICIES_COUNT
 };

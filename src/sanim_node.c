@@ -645,6 +645,101 @@ pivot_solve_two_axis_point
 }
 
 static INLINE res_T
+pivot_solve_target_aligned
+  (struct sanim_node* node,
+   const double in_dir[3])
+{
+  double mat[12], inv[9];
+  double local_in[3], local_out[3], local_target[3], ref_point[3];
+  double angleX, angleZ, Azimuth, Elevation, omega_h, theta;
+  double d1, d2, sx, sy;
+  struct pivot_data* pivot_data;
+  FILE* fp;
+  ASSERT(node && node->data && in_dir);
+  pivot_data = node->data->pivot_data;
+  ASSERT(pivot_data);
+  ASSERT(pivot_data->pivot.type == PIVOT_TWO_AXIS);
+  ASSERT(pivot_data->tracking.policy == TRACKING_TARGET_ALIGNED
+    || pivot_data->tracking.policy == TRACKING_NODE_TARGET);
+  ASSERT(d3_is_normalized(in_dir));
+
+  d3_set(ref_point, pivot_data->pivot.data.pivot2.ref_point);
+  ref_point[1] += pivot_data->pivot.data.pivot2.spacing;
+
+  /* get in_dir in local space */
+  node_get_transform(node, 0, mat);
+  d33_transpose(inv, mat); /* no scale factors: inverse is transpose */
+  d33_muld3(local_in, inv, in_dir);
+  ASSERT(d3_is_normalized(local_in));
+
+  /* get target point in local space */
+  if (pivot_data->tracking.policy == TRACKING_TARGET_ALIGNED) {
+    if (pivot_data->tracking.data.point.target_is_local) {
+      d3_set(local_target, pivot_data->tracking.data.point.target);
+    }
+    else {
+      d3_sub(local_target, pivot_data->tracking.data.point.target, mat + 9);
+      d33_muld3(local_target, inv, local_target);
+    }
+  }
+  else {
+    double transform[12];
+    const struct sanim_node* target
+      = node->data->pivot_data->tracking.data.node_target.tracked_node;
+    ASSERT(target && target->data);
+    ASSERT(pivot_data->tracking.policy == TRACKING_NODE_TARGET);
+    if (is_after_pivot(target)) return RES_BAD_ARG;
+    node_get_transform(target, 0, transform);
+    d3_sub(local_target, transform + 9, mat + 9);
+    d33_muld3(local_target, inv, local_target);
+  }
+
+  /* check if in, target_point and ref_point are compatible */
+  d1 = d3_dot(local_target, local_target);
+  d2 = d3_dot(ref_point, ref_point);
+  if (d1 <= d2) {
+    /* target in the pivot */
+    return RES_BAD_ARG;
+  }
+
+  /* compute rotated_n */
+  d3_sub(local_out, local_target, ref_point);
+  d3_normalize(local_out, local_out);
+
+  fp = fopen("angles.txt", "a");
+  if (!fp) {
+    fprintf(stderr, "Failed to open angles.txt for writing.\n");
+    return RES_EOF;
+  }
+  angleX = acos(local_out[2]);
+  angleZ = atan2(-local_out[1], -local_out[0]);
+
+  Elevation = asin(-local_in[2]);
+  Azimuth = atan2(-local_in[1], -local_in[0]);
+
+  sy = cos(Elevation) * sin(angleZ - Azimuth);
+  sx = cos(angleX) * cos(Elevation) * cos(angleZ - Azimuth) + sin(angleX) * sin(Elevation);
+
+  omega_h = atan2(-sy,sx);
+
+  theta = -0.5*acos(sin(Elevation) * cos(angleX) - cos(Elevation) * sin(angleX) * cos(angleZ - Azimuth));
+
+/*  fprintf(fp, "\n---------------------------------\n");*/
+/*  fprintf(fp, "theta_H: %.10f, lambda: %.10f, omega_h: %.10f, theta: %.10f\n", angleZ, angleX,omega_h,theta);*/
+/*  fprintf(fp, "Elevation: %.10f, Azimuth: %.10f\n", Elevation, Azimuth);*/
+/*  fprintf(fp, "local_in:   [%.10f, %.10f, %.10f]\n", local_in[0], local_in[1], local_in[2]);*/
+/*  fprintf(fp, "local_out:  [%.10f, %.10f, %.10f]\n", local_out[0], local_out[1], local_out[2]);*/
+  fclose(fp);
+
+  pivot_data->angleX = angleX;
+  pivot_data->angleZ = angleZ - PI/2.;
+  pivot_data->omega_h = omega_h;
+  pivot_data->theta = theta;
+
+  return RES_OK;
+}
+
+static INLINE res_T
 pivot_solve_two_axis_dir
   (struct sanim_node* node,
    const double in_dir[3])
@@ -695,6 +790,9 @@ pivot_solve_two_axis
   case TRACKING_NODE_TARGET:
     res = pivot_solve_two_axis_point(node, in_dir);
     break;
+  case TRACKING_TARGET_ALIGNED:
+    res = pivot_solve_target_aligned(node, in_dir);
+    break;
   case TRACKING_OUT_DIR:
     res = pivot_solve_two_axis_dir(node, in_dir);
     break;
@@ -734,6 +832,11 @@ copy_and_normalise_pivot_data
     /* nothing to be copied */
     break;
   case TRACKING_POINT:
+    d3_set(dest->tracking.data.point.target, tracking->data.point.target);
+    dest->tracking.data.point.target_is_local
+      = tracking->data.point.target_is_local;
+    break;
+  case TRACKING_TARGET_ALIGNED:
     d3_set(dest->tracking.data.point.target, tracking->data.point.target);
     dest->tracking.data.point.target_is_local
       = tracking->data.point.target_is_local;
@@ -815,8 +918,18 @@ compose_pivot_transform_R(double accum[12], const struct pivot_data* pivot) {
     break;
   }
   case PIVOT_TWO_AXIS: {
-    compose_ZXpivot_transform_R(
-      pivot->angleZ, pivot->angleX, pivot->pivot.data.pivot2.spacing, accum);
+    switch (pivot->tracking.policy) {
+    case TRACKING_TARGET_ALIGNED:
+      compose_ZXpivot_transform_R(
+        pivot->angleZ, pivot->angleX, pivot->pivot.data.pivot2.spacing, accum);
+      compose_ZXpivot_transform_R(
+        pivot->omega_h, pivot->theta, pivot->pivot.data.pivot2.spacing, accum);
+      break;    
+    default:
+      compose_ZXpivot_transform_R(
+        pivot->angleZ, pivot->angleX, pivot->pivot.data.pivot2.spacing, accum);
+      break;
+    }
     break;
   }
   default: FATAL("Unreachable code.\n"); break;
